@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus, Sparkles, LogIn } from "lucide-react"
 import { AddCompanyModal } from "./add-company-modal"
-import { SignedIn,  SignInButton, UserButton } from "@clerk/nextjs"
+import { SignedIn, SignInButton, UserButton } from "@clerk/nextjs"
 import { Unauthenticated } from "convex/react"
 import { useAuth } from "@clerk/nextjs"
 import toast from "react-hot-toast"
@@ -13,12 +13,11 @@ export function DashboardHeader() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { isSignedIn } = useAuth()
 
- const handleAddCompany = () => {
-    if(!isSignedIn) {
+  const handleAddCompany = () => {
+    if (!isSignedIn) {
       toast.custom((t) => (
-        <div className={`bg-gradient-to-r from-blue-500/90 to-purple-600/90 backdrop-blur-sm border border-blue-400/30 text-white px-6 py-3 rounded-lg shadow-xl flex items-center space-x-3 transform transition-all duration-300 ${
-          t.visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
-        }`}>
+        <div className={`bg-gradient-to-r from-blue-500/90 to-purple-600/90 backdrop-blur-sm border border-blue-400/30 text-white px-6 py-3 rounded-lg shadow-xl flex items-center space-x-3 transform transition-all duration-300 ${t.visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
+          }`}>
           <LogIn className="w-5 h-5 text-blue-500" />
           <span className="font-medium">Please sign in to add a company.</span>
         </div>
@@ -26,8 +25,8 @@ export function DashboardHeader() {
       return
 
     }
-    setIsModalOpen(true)  
- }
+    setIsModalOpen(true)
+  }
 
   return (
     <>
@@ -56,14 +55,16 @@ export function DashboardHeader() {
           </Button>
 
           <Unauthenticated>
-            <div
-              className="cursor-pointer bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white border-0 shadow-xl hover:shadow-2xl hover:shadow-indigo-500/30 flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 font-semibold"
-            >
-              <LogIn className="h-5 w-5 mr-2" />
-              <SignInButton mode="modal">
+            <SignInButton mode="modal">
+              <div
+                className="cursor-pointer bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white border-0 shadow-xl hover:shadow-2xl hover:shadow-indigo-500/30 flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 font-semibold"
+              >
+                <LogIn className="h-5 w-5 mr-2" />
                 <span>Sign In</span>
-              </SignInButton>
-            </div>
+
+              </div>
+            </SignInButton>
+
           </Unauthenticated>
           <SignedIn><UserButton /></SignedIn>
 
