@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
+import { createPortal } from "react-dom"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2, FileText } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { Building2 } from "lucide-react"
 import toast from "react-hot-toast"
@@ -32,6 +33,9 @@ interface CompanyTableProps {
 
 export function CompanyTable({ filters }: CompanyTableProps) {
   const [selectedCompany, setSelectedCompany] = useState<Id<"companies"> | null>(null)
+  const [showFullNote, setShowFullNote] = useState<string | null>(null)
+  const [noteCoords, setNoteCoords] = useState({ x: 0, y: 0 })
+  const noteRef = useRef<HTMLDivElement>(null)
 
   const { user } = useUser();
 
@@ -65,6 +69,22 @@ export function CompanyTable({ filters }: CompanyTableProps) {
     }
   }
 
+  const handleNoteClick = (note: string, event: React.MouseEvent) => {
+    if (!note || note.trim() === "") return
+    
+    const rect = event.currentTarget.getBoundingClientRect()
+    setNoteCoords({
+      x: rect.left,
+      y: rect.top
+    })
+    setShowFullNote(note)
+  }
+
+  const truncateNote = (note: string | undefined, maxLength: number = 30) => {
+    if (!note || note.trim() === "") return "No notes"
+    if (note.length <= maxLength) return note
+    return note.substring(0, maxLength) + "..."
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -124,6 +144,7 @@ export function CompanyTable({ filters }: CompanyTableProps) {
               <TableHead className="text-gray-200 font-semibold">Deadline</TableHead>
               <TableHead className="text-gray-200 font-semibold">Status</TableHead>
               <TableHead className="text-gray-200 font-semibold">Drive Type</TableHead>
+              <TableHead className="text-gray-200 font-semibold">Notes</TableHead>
               <TableHead className="text-gray-200 font-semibold">
                 Registration Link
               </TableHead>
@@ -167,6 +188,21 @@ export function CompanyTable({ filters }: CompanyTableProps) {
                   {company.driveType}
                 </TableCell>
                 <TableCell>
+                  <div
+                    className={`text-gray-300 font-medium cursor-pointer hover:text-blue-400 transition-colors duration-200 flex items-center gap-1 ${
+                      company.notes && company.notes.trim() !== "" ? "hover:underline" : ""
+                    }`}
+                    onClick={(e) => handleNoteClick(company.notes || "", e)}
+                  >
+                    {company.notes && company.notes.trim() !== "" && (
+                      <FileText className="h-3 w-3" />
+                    )}
+                    <span className="text-sm">
+                      {truncateNote(company.notes)}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
                   <a
                     href={company.link}
                     target="_blank"
@@ -204,6 +240,32 @@ export function CompanyTable({ filters }: CompanyTableProps) {
         </Table>
       </div>
 
+      {/* Full note popup with portal */}
+      {showFullNote &&
+        createPortal(
+          <div
+            ref={noteRef}
+            className="fixed z-50 bg-gray-900 text-white p-4 rounded-xl border border-gray-700/50 max-w-md shadow-2xl backdrop-blur-sm"
+            style={{
+              top: noteCoords.y + 30,
+              left: Math.min(noteCoords.x, window.innerWidth - 400),
+              animation: "fadeIn 0.3s ease-out"
+            }}
+            onClick={() => setShowFullNote(null)}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="h-4 w-4 text-blue-400" />
+              <span className="text-sm font-semibold text-blue-400">Note</span>
+            </div>
+            <p className="text-sm leading-relaxed text-gray-200 cursor-pointer">
+              {showFullNote}
+            </p>
+            <div className="mt-3 text-xs text-gray-400">
+              Click anywhere to close
+            </div>
+          </div>,
+          document.body
+        )}
       <StatusUpdateModal
         companyId={selectedCompany}
         isOpen={!!selectedCompany}

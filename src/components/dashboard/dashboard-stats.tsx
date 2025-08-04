@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Building2, Clock, CheckCircle, XCircle, TrendingUp, TrendingDown } from "lucide-react"
+import { Building2, Clock, CheckCircle, XCircle } from "lucide-react"
 import { useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 import { useUser } from "@clerk/nextjs"
@@ -18,14 +18,11 @@ export function DashboardStats() {
   const offersReceived = companies.filter((c) => c.status === "Offer").length
   const rejections = companies.filter((c) => c.status === "Rejected").length
 
-  // Calculate percentage changes (mock for now, could be calculated from historical data)
   const stats = [
     {
       name: "Total Applications",
       value: totalApplications.toString(),
       icon: Building2,
-      change: "+12%",
-      changeType: "positive" as const,
       gradient: "from-blue-500 to-cyan-500",
       bgGradient: "from-blue-500/10 to-cyan-500/10",
     },
@@ -33,8 +30,6 @@ export function DashboardStats() {
       name: "Active Interviews",
       value: activeInterviews.toString(),
       icon: Clock,
-      change: "+23%",
-      changeType: "positive" as const,
       gradient: "from-amber-500 to-orange-500",
       bgGradient: "from-amber-500/10 to-orange-500/10",
     },
@@ -42,8 +37,6 @@ export function DashboardStats() {
       name: "Offers Received",
       value: offersReceived.toString(),
       icon: CheckCircle,
-      change: "+8%",
-      changeType: "positive" as const,
       gradient: "from-emerald-500 to-green-500",
       bgGradient: "from-emerald-500/10 to-green-500/10",
     },
@@ -51,8 +44,6 @@ export function DashboardStats() {
       name: "Rejections",
       value: rejections.toString(),
       icon: XCircle,
-      change: "-5%",
-      changeType: "negative" as const,
       gradient: "from-red-500 to-pink-500",
       bgGradient: "from-red-500/10 to-pink-500/10",
     },
@@ -69,7 +60,6 @@ export function DashboardStats() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="p-3 rounded-xl bg-gray-700/50 w-12 h-12"></div>
-                <div className="w-12 h-4 bg-gray-700/50 rounded"></div>
               </div>
             </CardHeader>
             <CardContent className="pt-0">
@@ -99,16 +89,6 @@ export function DashboardStats() {
             <div className="flex items-center justify-between">
               <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.gradient} shadow-lg transform transition-transform duration-300 hover:scale-110`}>
                 <stat.icon className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex items-center space-x-1 text-sm">
-                {stat.changeType === "positive" ? (
-                  <TrendingUp className="h-4 w-4 text-emerald-400" />
-                ) : (
-                  <TrendingDown className="h-4 w-4 text-red-400" />
-                )}
-                <span className={stat.changeType === "positive" ? "text-emerald-400" : "text-red-400"}>
-                  {stat.change}
-                </span>
               </div>
             </div>
           </CardHeader>

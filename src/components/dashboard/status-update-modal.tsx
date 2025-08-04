@@ -112,9 +112,9 @@ export function StatusUpdateModal({
           </div>
           {/* Note textarea */}
           <div className="flex flex-col">
-            <label htmlFor="company-note" className="mb-1 text-gray-300">
+            <Label htmlFor="company-note" className="mb-1 text-gray-300">
               Add a Note (optional)
-            </label>
+            </Label>
             <textarea
               id="company-note"
               rows={4}
