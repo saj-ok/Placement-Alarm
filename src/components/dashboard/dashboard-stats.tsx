@@ -4,19 +4,23 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Building2, Clock, CheckCircle, XCircle } from "lucide-react"
 import { useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
-import { useUser } from "@clerk/nextjs"
+import { useUser, useAuth } from "@clerk/nextjs"
 
 export function DashboardStats() {
   const { user } = useUser()
-  const companies = useQuery(api.companies.getAllCompanies, { userId: user?.id ?? "" }) || []
+  const { isSignedIn } = useAuth()
+  const companies = useQuery(
+    api.companies.getAllCompanies, 
+    isSignedIn && user?.id ? { userId: user.id } : "skip"
+  ) || []
 
-  // Calculate stats from real data
-  const totalApplications = companies.length
-  const activeInterviews = companies.filter((c) => 
+  // Calculate stats from real data or show 0 if not authenticated
+  const totalApplications = isSignedIn ? companies.length : 0
+  const activeInterviews = isSignedIn ? companies.filter((c) => 
     c.status === "Interview" || c.status === "Technical round"
-  ).length
-  const offersReceived = companies.filter((c) => c.status === "Offer").length
-  const rejections = companies.filter((c) => c.status === "Rejected").length
+  ).length : 0
+  const offersReceived = isSignedIn ? companies.filter((c) => c.status === "Offer").length : 0
+  const rejections = isSignedIn ? companies.filter((c) => c.status === "Rejected").length : 0
 
   const stats = [
     {
@@ -49,7 +53,8 @@ export function DashboardStats() {
     },
   ]
 
-  if (!user) {
+  // Show loading skeleton only when user is signed in but data is still loading
+  if (isSignedIn && companies === undefined) {
     return (
       <div className="grid grid-cols-1 gap-6 lg:gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, index) => (
