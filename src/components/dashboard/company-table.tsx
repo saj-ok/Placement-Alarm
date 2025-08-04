@@ -16,76 +16,11 @@ import { formatDate } from "@/lib/utils"
 import { Building2 } from "lucide-react"
 import toast from "react-hot-toast"
 import { StatusUpdateModal } from "./status-update-modal"
+import {  useMutation, useQuery } from "convex/react"
+import { api } from "../../../convex/_generated/api"
+import {  useUser } from "@clerk/nextjs"
+import { Id } from "../../../convex/_generated/dataModel"
 
-// Add "type" to each company
-const mockCompanies = [
-  {
-    _id: "1",
-    name: "Google",
-    role: "Software Engineer",
-    package: "₹50 LPA",
-    appliedDate: "2024-01-15",
-    status: "Interview",
-    driveType: "On-Campus",
-    registrationLink: "https://careers.google.com/jobs/1",
-    type: "Intern+FTE", // ✅ new field
-  },
-  {
-    _id: "2",
-    name: "Microsoft",
-    role: "SDE-1",
-    package: "₹45 LPA",
-    appliedDate: "2024-01-10",
-    status: "Applied",
-    driveType: "Off-Campus",
-    registrationLink: "https://careers.microsoft.com/jobs/2",
-    type: "Intern",
-  },
-  {
-    _id: "3",
-    name: "Amazon",
-    role: "Software Developer",
-    package: "₹42 LPA",
-    appliedDate: "2024-01-08",
-    status: "Offer",
-    driveType: "On-Campus",
-    registrationLink: "https://www.amazon.jobs/en/jobs/3",
-    type: "Intern+PPO",
-  },
-  {
-    _id: "4",
-    name: "Meta",
-    role: "Frontend Engineer",
-    package: "₹48 LPA",
-    appliedDate: "2024-01-12",
-    status: "Rejected",
-    driveType: "Off-Campus",
-    registrationLink: "https://www.metacareers.com/jobs/4",
-    type: "Job",
-  },
-  {
-    _id: "5",
-    name: "Netflix",
-    role: "Full Stack Developer",
-    package: "₹55 LPA",
-    appliedDate: "2024-01-20",
-    status: "Interview",
-    driveType: "On-Campus",
-    registrationLink: "https://jobs.netflix.com/positions/5",
-    type: "Hackathon",
-  },
-  {
-    _id: "6",
-    name: "Apple",
-    role: "iOS Developer",
-    package: "₹52 LPA",
-    appliedDate: "2024-01-18",
-    status: "Applied",
-    driveType: "Off-Campus",
-    registrationLink: "https://www.apple.com/jobs/us/6",
-    type: "Job",
-  },
-]
 
 interface CompanyTableProps {
   filters: {
@@ -96,16 +31,22 @@ interface CompanyTableProps {
 }
 
 export function CompanyTable({ filters }: CompanyTableProps) {
-  const [selectedCompany, setSelectedCompany] = useState<string | null>(null)
-  const [companies, setCompanies] = useState(mockCompanies)
+  const [selectedCompany, setSelectedCompany] = useState<Id<"companies"> | null>(null)
 
+  const { user } = useUser();
+
+  const companies = useQuery(api.companies.getAllCompanies,{ userId: user?.id ?? "" }) || [];
+
+
+  const deleteCompany = useMutation(api.companies.deleteCompany);
+  
   const filteredCompanies = companies.filter((company) => {
     const matchesSearch =
       company.name.toLowerCase().includes(filters.search.toLowerCase()) ||
       company.role.toLowerCase().includes(filters.search.toLowerCase())
     const matchesStatus =
       filters.status === "all" ||
-      company.status.toLowerCase() === filters.status
+      company.status?.toLowerCase() === filters.status
     const matchesDriveType =
       filters.driveType === "all" ||
       company.driveType
@@ -115,22 +56,15 @@ export function CompanyTable({ filters }: CompanyTableProps) {
     return matchesSearch && matchesStatus && matchesDriveType
   })
 
-  const handleDelete = async (companyId: string) => {
+  const handleDelete = async (companyId: Id<"companies">) => {
     try {
-      setCompanies((prev) => prev.filter((c) => c._id !== companyId))
+      await deleteCompany({ companyId });
       toast.success("Company deleted successfully")
     } catch (error) {
       toast.error("Failed to delete company")
     }
   }
 
-  const handleStatusUpdate = (companyId: string, newStatus: string) => {
-    setCompanies((prev) =>
-      prev.map((c) =>
-        c._id === companyId ? { ...c, status: newStatus } : c
-      )
-    )
-  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -215,11 +149,11 @@ export function CompanyTable({ filters }: CompanyTableProps) {
                   {company.package}
                 </TableCell>
                 <TableCell className="text-gray-400">
-                  {formatDate(company.appliedDate)}
+                  {formatDate(company.deadline || new Date())}
                 </TableCell>
                 <TableCell>
                   <Badge
-                    className={`${getStatusColor(company.status)} border`}
+                    className={`${getStatusColor(company.status ?? "")} border`}
                   >
                     {company.status}
                   </Badge>
@@ -229,7 +163,7 @@ export function CompanyTable({ filters }: CompanyTableProps) {
                 </TableCell>
                 <TableCell>
                   <a
-                    href={company.registrationLink}
+                    href={company.link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-400 underline"
@@ -269,10 +203,12 @@ export function CompanyTable({ filters }: CompanyTableProps) {
         companyId={selectedCompany}
         isOpen={!!selectedCompany}
         onClose={() => setSelectedCompany(null)}
-        onSuccess={(companyId, status) => {
-          handleStatusUpdate(companyId, status)
-        }}
-        companies={companies}
+        companies={companies.map(c => ({
+          _id: c._id,
+          name: c.name,
+          status: c.status ?? "",
+          note: c.notes
+        }))}
       />
     </>
   )

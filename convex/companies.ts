@@ -56,7 +56,7 @@ export const deleteCompany = mutation({
 
 export const getAllCompanies = query({
       args: {
-            userId: v.id("users"),
+            userId: v.string(),
       },
       handler: async (ctx, args) => {
             const Identify = await ctx.auth.getUserIdentity();

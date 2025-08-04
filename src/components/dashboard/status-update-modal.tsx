@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -19,21 +18,21 @@ import {
 } from "@/components/ui/select";
 import toast from "react-hot-toast";
 import { Label } from "../ui/label";
+import { Id } from "../../../convex/_generated/dataModel";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 interface StatusUpdateModalProps {
-  companyId: string | null;
+  companyId: Id<"companies"> | null;
   isOpen: boolean;
   onClose: () => void;
-  /** Now also passes back the note text */
-  onSuccess: (companyId: string, status: string, note: string) => void;
-  companies: Array<{ _id: string; name: string; status: string; note?: string }>;
+  companies: Array<{ _id: Id<"companies">; name: string; status: string; note?: string }>;
 }
 
 export function StatusUpdateModal({
   companyId,
   isOpen,
   onClose,
-  onSuccess,
   companies,
 }: StatusUpdateModalProps) {
   const [status, setStatus] = useState("");
@@ -41,7 +40,9 @@ export function StatusUpdateModal({
   const [isLoading, setIsLoading] = useState(false);
   const company = companies.find((c) => c._id === companyId);
 
-  // When the modal opens or company changes, populate status & note
+  
+  const updateCompanyDetails = useMutation(api.companies.updateCompanyDetails);
+
   useEffect(() => {
     if (company) {
       setStatus(company.status);
@@ -54,11 +55,12 @@ export function StatusUpdateModal({
 
     setIsLoading(true);
     try {
-      // Replace this with your real API call...
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      onSuccess(companyId, status, note);
-      toast.success("Status & note updated successfully");
+      await updateCompanyDetails({
+        companyId,
+        status,
+        notes: note,
+      });
+      toast.success("Status updated successfully");
       onClose();
     } catch (error) {
       toast.error("Failed to update status");
