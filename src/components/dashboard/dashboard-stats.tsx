@@ -75,25 +75,25 @@ export function DashboardStats() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:gap-8 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-6 lg:gap-0  sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, index) => (
         <Card
           key={stat.name}
-          className="w-full max-w-sm mx-auto h-48 bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 hover:scale-105 hover:border-gray-600/50 backdrop-blur-sm"
+          className="  mx-auto w-44 h-44 bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 hover:scale-105 hover:border-gray-600/50 backdrop-blur-sm"
           style={{ 
             animationDelay: `${index * 0.1}s`,
             animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
           }}
         >
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+          <CardHeader>
+            <div className="flex items-center justify-center">
               <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.gradient} shadow-lg transform transition-transform duration-300 hover:scale-110`}>
                 <stat.icon className="h-6 w-6 text-white" />
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-3 text-center">
+          <CardContent >
+            <div className="space-y-1 text-center">
               <h3 className="text-sm font-medium text-slate-300 leading-tight">{stat.name}</h3>
               <div className="text-4xl font-bold text-white tracking-tight">{stat.value}</div>
             </div>
