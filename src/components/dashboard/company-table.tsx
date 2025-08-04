@@ -21,6 +21,7 @@ import {  useMutation, useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 import {  useUser, useAuth } from "@clerk/nextjs"
 import { Id } from "../../../convex/_generated/dataModel"
+import { CompaniesTableSkeleton } from "./loadingSkeleton"
 
 
 interface CompanyTableProps {
@@ -37,18 +38,18 @@ export function CompanyTable({ filters }: CompanyTableProps) {
   const [noteCoords, setNoteCoords] = useState({ x: 0, y: 0 })
   const noteRef = useRef<HTMLDivElement>(null)
 
-  const { user } = useUser()
+  const { user , isLoaded} = useUser()
   const { isSignedIn } = useAuth()
 
   const companies = useQuery(
     api.companies.getAllCompanies,
     isSignedIn && user?.id ? { userId: user.id } : "skip"
-  ) || []
+  ) 
 
 
   const deleteCompany = useMutation(api.companies.deleteCompany);
   
-  const filteredCompanies = companies.filter((company) => {
+  const filteredCompanies = companies?.filter((company) => {
     const matchesSearch =
       company.name.toLowerCase().includes(filters.search.toLowerCase()) ||
       company.role.toLowerCase().includes(filters.search.toLowerCase())
@@ -90,7 +91,7 @@ export function CompanyTable({ filters }: CompanyTableProps) {
     }
   }
 
-  const truncateNote = (note: string | undefined, maxLength: number = 30) => {
+  const truncateNote = (note: string | undefined, maxLength: number = 10) => {
     if (!note || note.trim() === "") return "No notes"
     if (note.length <= maxLength) return note
     return note.substring(0, maxLength) + "..."
@@ -126,68 +127,8 @@ export function CompanyTable({ filters }: CompanyTableProps) {
   }
 
 
-  // Show loading skeleton when user is signed in but data is still loading
-  if (isSignedIn && companies === undefined) {
-    return (
-      <div className="rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl backdrop-blur-sm">
-        <Table>
-          <TableHeader className="bg-gradient-to-r from-gray-900/80 to-gray-800/80 backdrop-blur-sm">
-            <TableRow className="border-gray-700/50 hover:bg-gray-800/30">
-              <TableHead className="text-gray-200 font-semibold">Company</TableHead>
-              <TableHead className="text-gray-200 font-semibold">Role</TableHead>
-              <TableHead className="text-gray-200 font-semibold">Type</TableHead>
-              <TableHead className="text-gray-200 font-semibold">Package</TableHead>
-              <TableHead className="text-gray-200 font-semibold">Deadline</TableHead>
-              <TableHead className="text-gray-200 font-semibold">Status</TableHead>
-              <TableHead className="text-gray-200 font-semibold">Drive Type</TableHead>
-              <TableHead className="text-gray-200 font-semibold">Notes</TableHead>
-              <TableHead className="text-gray-200 font-semibold">Registration Link</TableHead>
-              <TableHead className="text-gray-200 font-semibold">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {[...Array(3)].map((_, index) => (
-              <TableRow key={index} className="border-gray-700/50 animate-pulse">
-                <TableCell><div className="h-4 bg-gray-700/50 rounded w-24"></div></TableCell>
-                <TableCell><div className="h-4 bg-gray-700/50 rounded w-32"></div></TableCell>
-                <TableCell><div className="h-4 bg-gray-700/50 rounded w-20"></div></TableCell>
-                <TableCell><div className="h-4 bg-gray-700/50 rounded w-16"></div></TableCell>
-                <TableCell><div className="h-4 bg-gray-700/50 rounded w-20"></div></TableCell>
-                <TableCell><div className="h-6 bg-gray-700/50 rounded w-20"></div></TableCell>
-                <TableCell><div className="h-4 bg-gray-700/50 rounded w-24"></div></TableCell>
-                <TableCell><div className="h-4 bg-gray-700/50 rounded w-16"></div></TableCell>
-                <TableCell><div className="h-4 bg-gray-700/50 rounded w-16"></div></TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <div className="h-8 w-8 bg-gray-700/50 rounded"></div>
-                    <div className="h-8 w-8 bg-gray-700/50 rounded"></div>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    )
-  }
-
-  if (companies.length === 0 && isSignedIn) {
-    return (
-      <div className="text-center py-16" style={{
-        animation: "fadeIn 0.8s ease-out"
-      }}>
-        <div className="mx-auto h-16 w-16 bg-gradient-to-r from-gray-700 to-gray-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
-          <Building2 className="h-6 w-6 text-gray-400" />
-        </div>
-        <p className="text-gray-300 text-lg font-medium">
-          No companies added yet. Click "Add Company" to get started!
-        </p>
-      </div>
-    )
-  }
-
-  // Show message for unauthenticated users
-  if (!isSignedIn) {
+  //  Not signed in?
+  if (!user) {
     return (
       <div className="text-center py-16" style={{
         animation: "fadeIn 0.8s ease-out"
@@ -202,11 +143,20 @@ export function CompanyTable({ filters }: CompanyTableProps) {
     )
   }
 
-  return (
+    //  Signed in, but either Clerk is still loading *or* Convex hasn't returned data
+  if (!isLoaded || companies === undefined) {
+    return <CompaniesTableSkeleton rows={5} />
+  }
+
+ 
+  
+
+  //  Finally: we have a non‐empty array, render the table
+  if(companies.length > 0){return (
     <>
-      <div className="rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl backdrop-blur-sm">
-        <Table>
-          <TableHeader className="bg-gradient-to-r from-gray-900/80 to-gray-800/80 backdrop-blur-sm">
+      <div className="  rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl backdrop-blur-sm">
+        <Table >
+          <TableHeader className=" bg-gray-950  backdrop-blur-lg shadow-lg">
             <TableRow className="border-gray-700/50 hover:bg-gray-800/30">
               <TableHead className="text-gray-200 font-semibold">Company</TableHead>
               <TableHead className="text-gray-200 font-semibold">Role</TableHead>
@@ -223,7 +173,7 @@ export function CompanyTable({ filters }: CompanyTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredCompanies.map((company, index) => (
+            {filteredCompanies?.map((company, index) => (
               <TableRow
                 key={company._id}
                 className="border-gray-700/50 hover:bg-gray-800/30 transition-all duration-300 hover:shadow-lg"
@@ -347,7 +297,7 @@ export function CompanyTable({ filters }: CompanyTableProps) {
         companyId={selectedCompany}
         isOpen={!!selectedCompany}
         onClose={() => setSelectedCompany(null)}
-        companies={companies.map(c => ({
+        companies={(companies ?? []).map(c => ({
           _id: c._id,
           name: c.name,
           status: c.status ?? "",
@@ -355,5 +305,16 @@ export function CompanyTable({ filters }: CompanyTableProps) {
         }))}
       />
     </>
+  )}else{
+    return (
+    <div className="text-center py-16 animate-fadeIn">
+      <div className="mx-auto h-16 w-16 bg-gradient-to-r from-gray-700 to-gray-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
+        <Building2 className="h-6 w-6 text-gray-400" />
+      </div>
+      <p className="text-gray-300 text-lg font-medium">
+        No companies added yet. Click "Add Company" to get started!
+      </p>
+    </div>
   )
+  }
 }
