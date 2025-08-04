@@ -2,26 +2,27 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Building2, Clock, CheckCircle, XCircle, TrendingUp, TrendingDown } from "lucide-react"
-
-// Mock data for dashboard
-const mockCompanies = [
-  { _id: "1", name: "Google", role: "Software Engineer", status: "Interview", package: "₹50 LPA" },
-  { _id: "2", name: "Microsoft", role: "SDE-1", status: "Applied", package: "₹45 LPA" },
-  { _id: "3", name: "Amazon", role: "Software Developer", status: "Offer", package: "₹42 LPA" },
-  { _id: "4", name: "Meta", role: "Frontend Engineer", status: "Rejected", package: "₹48 LPA" },
-  { _id: "5", name: "Netflix", role: "Full Stack Developer", status: "Interview", package: "₹55 LPA" },
-  { _id: "6", name: "Apple", role: "iOS Developer", status: "Applied", package: "₹52 LPA" },
-  { _id: "7", name: "Tesla", role: "Software Engineer", status: "Offer", package: "₹60 LPA" },
-  { _id: "8", name: "Spotify", role: "Backend Engineer", status: "Interview", package: "₹46 LPA" },
-]
+import { useQuery } from "convex/react"
+import { api } from "../../../convex/_generated/api"
+import { useUser } from "@clerk/nextjs"
 
 export function DashboardStats() {
-  const companies = mockCompanies
+  const { user } = useUser()
+  const companies = useQuery(api.companies.getAllCompanies, { userId: user?.id ?? "" }) || []
 
+  // Calculate stats from real data
+  const totalApplications = companies.length
+  const activeInterviews = companies.filter((c) => 
+    c.status === "Interview" || c.status === "Technical round"
+  ).length
+  const offersReceived = companies.filter((c) => c.status === "Offer").length
+  const rejections = companies.filter((c) => c.status === "Rejected").length
+
+  // Calculate percentage changes (mock for now, could be calculated from historical data)
   const stats = [
     {
       name: "Total Applications",
-      value: companies.length.toString(),
+      value: totalApplications.toString(),
       icon: Building2,
       change: "+12%",
       changeType: "positive" as const,
@@ -30,7 +31,7 @@ export function DashboardStats() {
     },
     {
       name: "Active Interviews",
-      value: companies.filter((c) => c.status === "Interview").length.toString(),
+      value: activeInterviews.toString(),
       icon: Clock,
       change: "+23%",
       changeType: "positive" as const,
@@ -39,7 +40,7 @@ export function DashboardStats() {
     },
     {
       name: "Offers Received",
-      value: companies.filter((c) => c.status === "Offer").length.toString(),
+      value: offersReceived.toString(),
       icon: CheckCircle,
       change: "+8%",
       changeType: "positive" as const,
@@ -48,7 +49,7 @@ export function DashboardStats() {
     },
     {
       name: "Rejections",
-      value: companies.filter((c) => c.status === "Rejected").length.toString(),
+      value: rejections.toString(),
       icon: XCircle,
       change: "-5%",
       changeType: "negative" as const,
@@ -57,17 +58,46 @@ export function DashboardStats() {
     },
   ]
 
+  if (!user) {
+    return (
+      <div className="grid grid-cols-1 gap-6 lg:gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, index) => (
+          <Card
+            key={index}
+            className="w-full max-w-sm mx-auto h-48 bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50 animate-pulse"
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 rounded-xl bg-gray-700/50 w-12 h-12"></div>
+                <div className="w-12 h-4 bg-gray-700/50 rounded"></div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-2 text-center">
+                <div className="h-4 bg-gray-700/50 rounded w-24 mx-auto"></div>
+                <div className="h-8 bg-gray-700/50 rounded w-16 mx-auto"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
   return (
-    <div className="grid grid-cols-1 gap-6 lg:gap-0 sm:grid-cols-2 lg:grid-cols-4 ">
+    <div className="grid grid-cols-1 gap-6 lg:gap-8 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, index) => (
         <Card
           key={stat.name}
-          className=" w-48 h-48 rounded-4xl  border-white/10 hover:shadow-xl hover:shadow-blue-300/30 transition-all duration-300"
-          style={{ animationDelay: `${index * 0.1}s` }}
+          className="w-full max-w-sm mx-auto h-48 bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 hover:scale-105 hover:border-gray-600/50 backdrop-blur-sm"
+          style={{ 
+            animationDelay: `${index * 0.1}s`,
+            animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
+          }}
         >
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.gradient} shadow-lg`}>
+              <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.gradient} shadow-lg transform transition-transform duration-300 hover:scale-110`}>
                 <stat.icon className="h-6 w-6 text-white" />
               </div>
               <div className="flex items-center space-x-1 text-sm">
@@ -83,9 +113,9 @@ export function DashboardStats() {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="space-y-2 text-center">
-              <h3 className="text-sm font-medium text-slate-400">{stat.name}</h3>
-              <div className="text-3xl font-bold text-white">{stat.value}</div>
+            <div className="space-y-3 text-center">
+              <h3 className="text-sm font-medium text-slate-300 leading-tight">{stat.name}</h3>
+              <div className="text-4xl font-bold text-white tracking-tight">{stat.value}</div>
             </div>
           </CardContent>
         </Card>

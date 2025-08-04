@@ -98,11 +98,13 @@ export function CompanyTable({ filters }: CompanyTableProps) {
 
   if (companies.length === 0) {
     return (
-      <div className="text-center py-12 animate-fade-in">
-        <div className="mx-auto h-12 w-12 bg-gray-700 rounded-lg flex items-center justify-center mb-4">
+      <div className="text-center py-16" style={{
+        animation: "fadeIn 0.8s ease-out"
+      }}>
+        <div className="mx-auto h-16 w-16 bg-gradient-to-r from-gray-700 to-gray-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
           <Building2 className="h-6 w-6 text-gray-400" />
         </div>
-        <p className="text-gray-400">
+        <p className="text-gray-300 text-lg font-medium">
           No companies added yet. Click "Add Company" to get started!
         </p>
       </div>
@@ -111,54 +113,57 @@ export function CompanyTable({ filters }: CompanyTableProps) {
 
   return (
     <>
-      <div className="rounded-lg border border-gray-700 overflow-hidden">
+      <div className="rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl backdrop-blur-sm">
         <Table>
-          <TableHeader className="bg-gray-950">
-            <TableRow className="border-gray-700 hover:bg-gray-800/50">
-              <TableHead className="text-gray-300">Company</TableHead>
-              <TableHead className="text-gray-300">Role</TableHead>
-              <TableHead className="text-gray-300">Type</TableHead>
-              <TableHead className="text-gray-300">Package</TableHead>
-              <TableHead className="text-gray-300">Deadline</TableHead>
-              <TableHead className="text-gray-300">Status</TableHead>
-              <TableHead className="text-gray-300">Drive Type</TableHead>
-              <TableHead className="text-gray-300">
+          <TableHeader className="bg-gradient-to-r from-gray-900/80 to-gray-800/80 backdrop-blur-sm">
+            <TableRow className="border-gray-700/50 hover:bg-gray-800/30">
+              <TableHead className="text-gray-200 font-semibold">Company</TableHead>
+              <TableHead className="text-gray-200 font-semibold">Role</TableHead>
+              <TableHead className="text-gray-200 font-semibold">Type</TableHead>
+              <TableHead className="text-gray-200 font-semibold">Package</TableHead>
+              <TableHead className="text-gray-200 font-semibold">Deadline</TableHead>
+              <TableHead className="text-gray-200 font-semibold">Status</TableHead>
+              <TableHead className="text-gray-200 font-semibold">Drive Type</TableHead>
+              <TableHead className="text-gray-200 font-semibold">
                 Registration Link
               </TableHead>
-              <TableHead className="text-gray-300">Actions</TableHead>
+              <TableHead className="text-gray-200 font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredCompanies.map((company, index) => (
               <TableRow
                 key={company._id}
-                className="border-gray-700 hover:bg-gray-800/50 transition-colors duration-200 animate-fade-in"
-                style={{ animationDelay: `${index * 0.05}s` }}
+                className="border-gray-700/50 hover:bg-gray-800/30 transition-all duration-300 hover:shadow-lg"
+                style={{ 
+                  animationDelay: `${index * 0.05}s`,
+                  animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`
+                }}
               >
-                <TableCell className="font-medium text-white">
+                <TableCell className="font-semibold text-white">
                   {company.name}
                 </TableCell>
-                <TableCell className="text-gray-300">
+                <TableCell className="text-gray-200 font-medium">
                   {company.role}
                 </TableCell>
-                <TableCell className="text-gray-300">
+                <TableCell className="text-gray-200 font-medium">
                   {company.type}
                 </TableCell>
 
-                <TableCell className="text-gray-300 font-semibold">
+                <TableCell className="text-gray-200 font-bold">
                   {company.package}
                 </TableCell>
-                <TableCell className="text-gray-400">
+                <TableCell className="text-gray-300 font-medium">
                   {formatDate(company.deadline || new Date())}
                 </TableCell>
                 <TableCell>
                   <Badge
-                    className={`${getStatusColor(company.status ?? "")} border`}
+                    className={`${getStatusColor(company.status ?? "")} border font-medium shadow-sm`}
                   >
                     {company.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-gray-300">
+                <TableCell className="text-gray-200 font-medium">
                   {company.driveType}
                 </TableCell>
                 <TableCell>
@@ -166,7 +171,7 @@ export function CompanyTable({ filters }: CompanyTableProps) {
                     href={company.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 underline"
+                    className="text-blue-400 hover:text-blue-300 underline font-medium transition-colors duration-200"
                   >
                     Register
                   </a>
@@ -179,7 +184,7 @@ export function CompanyTable({ filters }: CompanyTableProps) {
                       onClick={() =>
                         setSelectedCompany(company._id)
                       }
-                      className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 transition-all duration-200"
+                      className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 transition-all duration-300 hover:scale-110"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -187,7 +192,7 @@ export function CompanyTable({ filters }: CompanyTableProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDelete(company._id)}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-all duration-200"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-all duration-300 hover:scale-110"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

@@ -31,20 +31,22 @@ export function CompanyFilters({ filters, onFiltersChange }: CompanyFiltersProps
   const hasActiveFilters = filters.search || filters.status !== "all" || filters.driveType !== "all"
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 animate-slide-in">
+    <div className="flex flex-col sm:flex-row gap-4" style={{
+      animation: "slideInFromLeft 0.6s ease-out"
+    }}>
       <div className="flex-1">
         <Input
           placeholder="Search companies or roles..."
           value={filters.search}
           onChange={(e) => updateFilter("search", e.target.value)}
-          className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus:border-blue-500 transition-all duration-200"
+          className="bg-gray-700/50 border-gray-600/50 text-white placeholder:text-gray-400 focus:border-blue-500 focus:bg-gray-700/70 transition-all duration-300 backdrop-blur-sm shadow-lg"
         />
       </div>
       <Select value={filters.status} onValueChange={(value) => updateFilter("status", value)}>
-        <SelectTrigger className="w-full sm:w-[180px] bg-gray-700 border-gray-600 text-white">
+        <SelectTrigger className="w-full sm:w-[180px] bg-gray-700/50 border-gray-600/50 text-white backdrop-blur-sm shadow-lg">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
-        <SelectContent className="bg-gray-800 border-gray-700">
+        <SelectContent className="bg-gray-800/90 border-gray-700/50 backdrop-blur-sm">
           <SelectItem value="all" className="text-white hover:bg-gray-700">
             All Status
           </SelectItem>
@@ -63,10 +65,10 @@ export function CompanyFilters({ filters, onFiltersChange }: CompanyFiltersProps
         </SelectContent>
       </Select>
       <Select value={filters.driveType} onValueChange={(value) => updateFilter("driveType", value)}>
-        <SelectTrigger className="w-full sm:w-[180px] bg-gray-700 border-gray-600 text-white">
+        <SelectTrigger className="w-full sm:w-[180px] bg-gray-700/50 border-gray-600/50 text-white backdrop-blur-sm shadow-lg">
           <SelectValue placeholder="Drive Type" />
         </SelectTrigger>
-        <SelectContent className="bg-gray-800 border-gray-700">
+        <SelectContent className="bg-gray-800/90 border-gray-700/50 backdrop-blur-sm">
           <SelectItem value="all" className="text-white hover:bg-gray-700">
             All Types
           </SelectItem>
@@ -82,7 +84,7 @@ export function CompanyFilters({ filters, onFiltersChange }: CompanyFiltersProps
         <Button
           variant="outline"
           onClick={clearFilters}
-          className="w-full sm:w-auto bg-gray-700 border-gray-600 text-white hover:bg-gray-600 transition-all duration-200"
+          className="w-full sm:w-auto bg-gray-700/50 border-gray-600/50 text-white hover:bg-gray-600/70 transition-all duration-300 backdrop-blur-sm shadow-lg"
         >
           <X className="h-4 w-4 mr-2" />
           Clear
