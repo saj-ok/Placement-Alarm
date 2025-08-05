@@ -19,5 +19,8 @@ export default defineSchema({
             status: v.optional(v.string()),
             notes: v.optional(v.string()), 
             userId: v.string(),
-      }).index("by_user_id", ["userId"]),
+            remindersSent: v.optional(v.number()),
+            lastReminderAt: v.optional(v.string()),
+      }).index("by_user_id", ["userId"])
+        .index("by_deadline", ["deadline"]),
 })

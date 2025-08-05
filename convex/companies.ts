@@ -29,6 +29,8 @@ export const addCompany = mutation({
             return await ctx.db.insert("companies", {
                   ...args,
                   userId: Identify.subject,
+                  remindersSent: 0,
+                  lastReminderAt: "",
             })
       }
 })
@@ -77,7 +79,7 @@ export const getAllCompanies = query({
                   .filter(q => q.eq(q.field("userId"), args.userId))
                   .collect();
       },
-})
+}) 
 
 export const updateCompanyDetails = mutation({
       args:{
@@ -105,3 +107,57 @@ export const updateCompanyDetails = mutation({
                   });
       },
 })
+
+
+export const getApplicationsForReminder = query({
+  handler: async ({ db }) => {
+    const now = new Date();
+    // thresholds: 4h, 3h, 2h before deadline
+    const thresholds = [4, 3, 2].map(h =>
+      new Date(now.getTime() + h * 60 * 60 * 1000)
+    );
+
+    let apps: any[] = [];
+    for (let i = 0; i < thresholds.length; i++) {
+      const lower = thresholds[i];
+      const upper = new Date(lower.getTime() + 5 * 60 * 1000); // 5-minute window
+
+      const results = await db
+        .query("companies")
+        .withIndex("by_deadline")
+        .filter(q =>
+          q.and(
+            q.eq(q.field("status"), "Applied"),
+            q.eq(q.field("remindersSent"), i),
+            q.lt(q.field("deadline"), upper.toISOString()),
+            q.gt(q.field("deadline"), lower.toISOString())
+          )
+        )
+        .collect();
+
+      apps = apps.concat(results);
+    }
+
+    return apps;
+  },
+});
+
+
+export const incrementReminderCount = mutation({
+  args: { 
+      id: v.id("companies")
+ },
+  handler: async ( ctx, args ) => {
+    // First get the current company data
+    const company = await ctx.db.get(args.id);
+    if (!company) {
+      throw new Error("Company not found");
+    }
+    
+    // Then patch with the incremented value
+    await ctx.db.patch(args.id, {
+      remindersSent: (company.remindersSent || 0) + 1,
+      lastReminderAt: new Date().toISOString(),
+    });
+  },
+});
