@@ -23,4 +23,13 @@ export default defineSchema({
             lastReminderAt: v.optional(v.string()),
       }).index("by_user_id", ["userId"])
         .index("by_deadline", ["deadline"]),
+
+      // Added profile table to store user profile information including WhatsApp number
+      profiles: defineTable({
+            userId: v.string(),
+            name: v.string(),
+            email: v.string(),
+            whatsappNumber: v.optional(v.string()),
+            profileImage: v.optional(v.string()),
+      }).index("by_user_id", ["userId"]),
 })

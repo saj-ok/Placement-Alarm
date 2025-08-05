@@ -59,6 +59,14 @@ http.route({
           email,
           name,
         });
+        
+        // Also create a profile entry for the new user
+        await ctx.runMutation(api.profiles.upsertProfile, {
+          userId: id,
+          email,
+          name,
+          profileImage: evt.data.image_url || undefined,
+        });
       } catch (error) {
         console.log("Error creating user:", error);
         return new Response("Error creating user", { status: 500 });

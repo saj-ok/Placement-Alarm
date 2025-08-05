@@ -6,9 +6,18 @@ import { api } from "../../../../convex/_generated/api";
 import { sendEmail, sendWhatsApp } from "@/lib/notifications";
 
 
-// Replace with your actual user-contact lookup
+// Updated to fetch user contact information from profile
 async function fetchUserContact(userId: string) {
-  return { email: "boktiaroff01@example.com", whatsapp: "+919678322996" };
+  try {
+    const profile = await fetchQuery(api.profiles.getProfileForReminder, { userId });
+    return {
+      email: profile?.email || null,
+      whatsapp: profile?.whatsappNumber || null,
+    };
+  } catch (error) {
+    console.error("Error fetching user contact:", error);
+    return { email: null, whatsapp: null };
+  }
 }
 
 export default async function handler(
@@ -20,27 +29,55 @@ export default async function handler(
 
     await Promise.all(
       apps.map(async (app) => {
-        const { id, companyName, role, deadline, remindersSent, userId } = app;
+        const { _id, name, role, deadline, remindersSent, userId } = app;
         const when = new Date(deadline).toLocaleString("en-GB", {
           timeZone: "Asia/Kolkata",
           dateStyle: "medium",
           timeStyle: "short",
         });
 
-        const subject = `Reminder #${remindersSent + 1}: ${role} at ${companyName}`;
-        const html = `<p>Your application for <strong>${role}</strong> at <strong>${companyName}</strong> is due on <em>${when}</em>.</p>`;
+        const subject = `Reminder #${(remindersSent || 0) + 1}: ${role} at ${name}`;
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #4F46E5;">Application Deadline Reminder</h2>
+            <p>Hi there!</p>
+            <p>This is a friendly reminder that your application for <strong>${role}</strong> at <strong>${name}</strong> is due on:</p>
+            <div style="background: #F3F4F6; padding: 15px; border-radius: 8px; margin: 15px 0;">
+              <p style="margin: 0; font-size: 18px; font-weight: bold; color: #1F2937;">${when}</p>
+            </div>
+            <p>Don't forget to submit your application before the deadline!</p>
+            <p>Best of luck with your application!</p>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #E5E7EB;">
+            <p style="font-size: 12px; color: #6B7280;">This is an automated reminder from Placement Alarm.</p>
+          </div>
+        `;
 
         const user = await fetchUserContact(userId);
+        
+        // Send email if user has email
         if (user.email) {
-          await sendEmail(user.email, subject, html);
+          try {
+            await sendEmail(user.email, subject, html);
+            console.log(`Email sent to ${user.email} for ${name}`);
+          } catch (error) {
+            console.error(`Failed to send email to ${user.email}:`, error);
+          }
         }
+        
+        // Send WhatsApp if user has WhatsApp number
         if (user.whatsapp) {
-          // strip tags for WhatsApp
-          const text = html.replace(/<[^>]+>/g, "");
-          await sendWhatsApp(user.whatsapp, text);
+          try {
+            // Create WhatsApp-friendly message
+            const whatsappMessage = `🚨 *Application Deadline Reminder*\n\nHi! Your application for *${role}* at *${name}* is due on:\n\n📅 ${when}\n\nDon't forget to submit before the deadline!\n\nGood luck! 🍀\n\n_Automated reminder from Placement Alarm_`;
+            await sendWhatsApp(user.whatsapp, whatsappMessage);
+            console.log(`WhatsApp sent to ${user.whatsapp} for ${name}`);
+          } catch (error) {
+            console.error(`Failed to send WhatsApp to ${user.whatsapp}:`, error);
+          }
         }
 
-        await fetchMutation(api.companies.incrementReminderCount, { id });
+        // Increment reminder count
+        await fetchMutation(api.companies.incrementReminderCount, { id: _id });
       })
     );
 
