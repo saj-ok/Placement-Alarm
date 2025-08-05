@@ -127,7 +127,7 @@ export const getApplicationsForReminder = query({
         .withIndex("by_deadline")
         .filter(q =>
           q.and(
-            q.eq(q.field("status"), "Applied"),
+            q.eq(q.field("status"), "Not Applied"),
             q.eq(q.field("remindersSent"), i),
             q.neq(q.field("deadline"), undefined), // Ensure deadline exists
             q.lt(q.field("deadline"), upper.toISOString()),
