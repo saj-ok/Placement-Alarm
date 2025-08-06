@@ -1,0 +1,18 @@
+name: Send Reminders
+
+# Run every 15 minutes
+on:
+  schedule:
+    - cron:  '*/15 * * * *'
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Curl the reminder endpoint
+        env:
+          VERCEL_URL: ${{ secrets.VERCEL_URL }} 
+          # e.g. https://placement-alarm.vercel.app
+          # Or set a custom domain if you have one.
+        run: |
+          curl -X GET "$VERCEL_URL/api/cron/send-reminders"

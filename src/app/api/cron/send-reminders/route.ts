@@ -2,8 +2,8 @@
 
 import type { NextApiRequest, NextApiResponse } from "next";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
-import { api } from "../../../../convex/_generated/api";
-import { sendEmail, sendWhatsApp } from "@/lib/notifications";
+import { api } from "../../../../../convex/_generated/api";
+import { sendEmail, sendWhatsApp } from "../../../../../lib/notifications";
 
 
 // Updated to fetch user contact information from profile
