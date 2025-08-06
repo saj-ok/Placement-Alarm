@@ -85,6 +85,7 @@ export const updateCompanyDetails = mutation({
       args:{
             companyId: v.id("companies"),
             status: v.optional(v.string()),
+            statusDateTime: v.optional(v.string()),
             notes: v.optional(v.string()),
       },
       handler: async (ctx, args) => {
@@ -103,6 +104,7 @@ export const updateCompanyDetails = mutation({
             return await ctx.db
                   .patch(args.companyId, {
                         status: args.status,
+                        statusDateTime: args.statusDateTime,
                         notes: args.notes,
                   });
       },

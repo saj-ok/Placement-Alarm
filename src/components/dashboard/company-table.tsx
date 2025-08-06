@@ -199,11 +199,25 @@ export function CompanyTable({ filters }: CompanyTableProps) {
                   {formatDate(company.deadline || new Date())}
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    className={`${getStatusColor(company.status ?? "")} border font-medium shadow-sm`}
-                  >
-                    {company.status}
-                  </Badge>
+                  <div className="space-y-1">
+                    <Badge
+                      className={`${getStatusColor(company.status ?? "")} border font-medium shadow-sm`}
+                    >
+                      {company.status}
+                    </Badge>
+                    {company.statusDateTime && (
+                      <div className="text-xs text-gray-400 font-medium">
+                        {new Date(company.statusDateTime).toLocaleString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-gray-200 font-medium">
                   {company.driveType}
@@ -297,10 +311,11 @@ export function CompanyTable({ filters }: CompanyTableProps) {
         companyId={selectedCompany}
         isOpen={!!selectedCompany}
         onClose={() => setSelectedCompany(null)}
-        companies={(companies ?? []).map(c => ({
+        companies={(companies ?? []).map((c: any) => ({
           _id: c._id,
           name: c.name,
           status: c.status ?? "",
+          statusDateTime: c.statusDateTime,
           note: c.notes
         }))}
       />

@@ -21,12 +21,13 @@ import { Label } from "../ui/label";
 import { Id } from "../../../convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { Input } from "../ui/input";
 
 interface StatusUpdateModalProps {
   companyId: Id<"companies"> | null;
   isOpen: boolean;
   onClose: () => void;
-  companies: Array<{ _id: Id<"companies">; name: string; status: string; note?: string }>;
+  companies: Array<{ _id: Id<"companies">; name: string; status: string; statusDateTime?: string; note?: string }>;
 }
 
 export function StatusUpdateModal({
@@ -36,28 +37,62 @@ export function StatusUpdateModal({
   companies,
 }: StatusUpdateModalProps) {
   const [status, setStatus] = useState("");
+  const [statusDateTime, setStatusDateTime] = useState("");
   const [note, setNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [statusDate, setStatusDate] = useState("");
+  const [timeHour, setTimeHour] = useState("");
+  const [timeMinute, setTimeMinute] = useState("");
+  const [timeAmPm, setTimeAmPm] = useState("AM");
   const company = companies.find((c) => c._id === companyId);
 
   
   const updateCompanyDetails = useMutation(api.companies.updateCompanyDetails);
 
+  // Helper function to combine date and time
+  const updateStatusDateTime = () => {
+    if (statusDate && timeHour && timeMinute) {
+      // Convert 12-hour to 24-hour format
+      let hour24 = parseInt(timeHour);
+      if (timeAmPm === "PM" && hour24 !== 12) {
+        hour24 += 12;
+      } else if (timeAmPm === "AM" && hour24 === 12) {
+        hour24 = 0;
+      }
+      
+      const time24 = `${hour24.toString().padStart(2, '0')}:${timeMinute.padStart(2, '0')}`;
+      const combinedDateTime = `${statusDate}T${time24}`;
+      setStatusDateTime(combinedDateTime);
+    }
+  };
+
   useEffect(() => {
     if (company) {
       setStatus(company.status);
+      setStatusDateTime("");
       setNote(company.note ?? "");
+      // Reset time fields
+      setStatusDate("");
+      setTimeHour("");
+      setTimeMinute("");
+      setTimeAmPm("AM");
     }
   }, [company]);
 
+  // Update statusDateTime when date or time changes
+  useEffect(() => {
+    updateStatusDateTime();
+  }, [statusDate, timeHour, timeMinute, timeAmPm]);
+
   const handleUpdate = async () => {
-    if (!companyId || !status) return;
+    if (!companyId || !status || !statusDate || !timeHour || !timeMinute) return;
 
     setIsLoading(true);
     try {
       await updateCompanyDetails({
         companyId,
         status,
+        statusDateTime,
         notes: note,
       });
       toast.success("Status updated successfully");
@@ -110,6 +145,59 @@ export function StatusUpdateModal({
           </Select>
 
           </div>
+          
+          {/* Status Date Time */}
+          <div className="space-y-2">
+            <Label htmlFor="statusDateTime" className="text-gray-300">
+              Status Date & Time
+            </Label>
+            <div className="space-y-2 flex  gap-4">
+              <Input
+                type="date"
+                id="status-date"
+                value={statusDate}
+                onChange={(e) => setStatusDate(e.target.value)}
+                className={`bg-gray-700 border-gray-600 ${statusDate ? 'text-white' : 'text-gray-400'} placeholder:text-gray-400`}
+                required
+              />
+              <div className="flex gap-2">
+                <Select value={timeHour} onValueChange={setTimeHour}>
+                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white w-20">
+                    <SelectValue placeholder="Hr" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700">
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
+                      <SelectItem key={hour} value={hour.toString()} className="text-white hover:bg-gray-700">
+                        {hour.toString().padStart(2, '0')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={timeMinute} onValueChange={setTimeMinute}>
+                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white w-20">
+                    <SelectValue placeholder="Min" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700">
+                    {Array.from({ length: 60 }, (_, i) => i).map((minute) => (
+                      <SelectItem key={minute} value={minute.toString().padStart(2, '0')} className="text-white hover:bg-gray-700">
+                        {minute.toString().padStart(2, '0')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={timeAmPm} onValueChange={setTimeAmPm}>
+                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700">
+                    <SelectItem value="AM" className="text-white hover:bg-gray-700">AM</SelectItem>
+                    <SelectItem value="PM" className="text-white hover:bg-gray-700">PM</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          
           {/* Note textarea */}
           <div className="flex flex-col">
             <Label htmlFor="company-note" className="mb-1 text-gray-300">
@@ -136,7 +224,7 @@ export function StatusUpdateModal({
           </Button>
           <Button
             onClick={handleUpdate}
-            disabled={!status || isLoading}
+            disabled={!status || !statusDate || !timeHour || !timeMinute || isLoading}
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0"
           >
             {isLoading ? (

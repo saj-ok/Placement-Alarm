@@ -17,6 +17,7 @@ export default defineSchema({
             type: v.string(),
             link: v.optional(v.string()),
             status: v.optional(v.string()),
+            statusDateTime: v.optional(v.string()),
             notes: v.optional(v.string()), 
             userId: v.string(),
             remindersSent: v.optional(v.number()),
