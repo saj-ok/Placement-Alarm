@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
-import { fetchQuery, fetchMutation } from "convex/nextjs";
+import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../../../convex/_generated/api";
 import { sendEmail, sendWhatsApp } from "../../../../../../lib/notifications";
 
 
+// Initialize Convex client
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
 // Fetch user's preferred contact methods from profile
 async function fetchUserContact(userId: string) {
   try {
-    const profile = await fetchQuery(api.profiles.getProfileForReminder, { userId });
+    const profile = await convex.query(api.profiles.getProfileForReminder, { userId });
     return {
       email: profile?.email || null,
       whatsapp: profile?.whatsappNumber || null,
@@ -23,7 +26,7 @@ export const revalidate = 0;
 
 export async function GET(_request: Request) {
   try {
-    const apps = await fetchQuery(api.companies.getApplicationsForReminder);
+    const apps = await convex.query(api.companies.getApplicationsForReminder) || [];
 
     await Promise.all(
       apps.map(async (app) => {
@@ -72,7 +75,7 @@ export async function GET(_request: Request) {
         }
 
         // Increment reminder count
-        await fetchMutation(api.companies.incrementReminderCount, { id: _id });
+        await convex.mutation(api.companies.incrementReminderCount, { id: _id });
       })
     );
 

@@ -112,10 +112,10 @@ export const updateCompanyDetails = mutation({
 
 
 export const getApplicationsForReminder = query({
-  handler: async ({ db }) => {
+  handler: async (ctx) => {
     const now = new Date();
     // thresholds: 4h, 3h, 2h before deadline
-    const thresholds = [4, 3, 2].map(h =>
+    const thresholds = [4, 3, 2, 1].map(h =>
       new Date(now.getTime() + h * 60 * 60 * 1000)
     );
 
@@ -124,7 +124,7 @@ export const getApplicationsForReminder = query({
       const lower = thresholds[i];
       const upper = new Date(lower.getTime() + 5 * 60 * 1000); // 5-minute window
 
-      const results = await db
+      const results = await ctx.db
         .query("companies")
         .withIndex("by_deadline")
         .filter(q =>
