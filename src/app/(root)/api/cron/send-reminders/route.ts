@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
-import { api } from "../../../../../convex/_generated/api";
-import { sendEmail, sendWhatsApp } from "../../../../../lib/notifications";
+import { api } from "../../../../../../convex/_generated/api";
+import { sendEmail, sendWhatsApp } from "../../../../../../lib/notifications";
 
 
 // Fetch user's preferred contact methods from profile
