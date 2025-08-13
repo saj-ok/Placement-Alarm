@@ -114,34 +114,25 @@ export const updateCompanyDetails = mutation({
 export const getApplicationsForReminder = query({
   handler: async (ctx) => {
     const now = new Date();
-    // thresholds: 4h, 3h, 2h before deadline
-    const thresholds = [4, 3, 2, 1].map(h =>
-      new Date(now.getTime() + h * 60 * 60 * 1000)
-    );
+    const fourHoursFromNow = new Date(now.getTime() + 4 * 60 * 60 * 1000);
 
-    let apps: any[] = [];
-    for (let i = 0; i < thresholds.length; i++) {
-      const lower = thresholds[i];
-      const upper = new Date(lower.getTime() + 5 * 60 * 1000); // 5-minute window
-
-      const results = await ctx.db
-        .query("companies")
-        .withIndex("by_deadline")
-        .filter(q =>
-          q.and(
-            q.eq(q.field("status"), "Not Applied"),
-            q.eq(q.field("remindersSent"), i),
-            q.neq(q.field("deadline"), undefined), // Ensure deadline exists
-            q.lt(q.field("deadline"), upper.toISOString()),
-            q.gt(q.field("deadline"), lower.toISOString())
-          )
+    // Fetch applications with status "Not Applied" and a deadline within the next 4 hours.
+    // We also ensure we don't try to remind for jobs where we've sent all reminders (e.g., 4 reminders).
+    const upcomingApps = await ctx.db
+      .query("companies")
+      .withIndex("by_deadline")
+      .filter(q =>
+        q.and(
+          q.eq(q.field("status"), "Not Applied"),
+          q.lt(q.field("remindersSent"), 4), // Stop if 4 reminders are sent
+          q.neq(q.field("deadline"), undefined),
+          q.gt(q.field("deadline"), now.toISOString()), // Deadline must be in the future
+          q.lt(q.field("deadline"), fourHoursFromNow.toISOString()) // And within the next 4 hours
         )
-        .collect();
-
-      apps = apps.concat(results);
-    }
-
-    return apps;
+      )
+      .collect();
+      
+    return upcomingApps;
   },
 });
 

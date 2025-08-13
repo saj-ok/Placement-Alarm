@@ -3,11 +3,8 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../../../convex/_generated/api";
 import { sendEmail, sendWhatsApp } from "../../../../../../lib/notifications";
 
-
-// Initialize Convex client
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-// Fetch user's preferred contact methods from profile
 async function fetchUserContact(userId: string) {
   try {
     const profile = await convex.query(api.profiles.getProfileForReminder, { userId });
@@ -21,23 +18,44 @@ async function fetchUserContact(userId: string) {
   }
 }
 
-// Disable caching, suitable for cron invocation
 export const revalidate = 0;
 
 export async function GET(_request: Request) {
   try {
-    const apps = await convex.query(api.companies.getApplicationsForReminder) || [];
+    const now = new Date().getTime();
+    // Fetch all applications due in the next 4 hours
+    const upcomingApps = await convex.query(api.companies.getApplicationsForReminder) || [];
 
-    await Promise.all(
-      apps.map(async (app) => {
-        const { _id, name, role, deadline, remindersSent, userId } = app;
+    let remindersSentCount = 0;
+
+    for (const app of upcomingApps) {
+      const { _id, name, role, deadline, remindersSent, userId } = app;
+
+      if (!deadline) continue;
+
+      const deadlineTime = new Date(deadline).getTime();
+      const hoursUntilDeadline = (deadlineTime - now) / (1000 * 60 * 60);
+
+      let shouldSend = false;
+      // Determine if a reminder should be sent based on time and count
+      if (hoursUntilDeadline <= 4 && hoursUntilDeadline > 3 && (remindersSent || 0) === 0) {
+        shouldSend = true;
+      } else if (hoursUntilDeadline <= 3 && hoursUntilDeadline > 2 && (remindersSent || 0) === 1) {
+        shouldSend = true;
+      } else if (hoursUntilDeadline <= 2 && hoursUntilDeadline > 1 && (remindersSent || 0) === 2) {
+        shouldSend = true;
+      } else if (hoursUntilDeadline <= 1 && (remindersSent || 0) === 3) {
+        shouldSend = true;
+      }
+
+      if (shouldSend) {
         const when = new Date(deadline).toLocaleString("en-GB", {
           timeZone: "Asia/Kolkata",
           dateStyle: "medium",
           timeStyle: "short",
         });
 
-        const subject = `Reminder #${(remindersSent || 0) + 1}: ${role} at ${name}`;
+        const subject = `Reminder: ${role} at ${name} deadline approaching!`;
         const html = `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
   <h2 style="color: #4F46E5;">Application Deadline Reminder</h2>
@@ -53,38 +71,29 @@ export async function GET(_request: Request) {
 </div>
         `;
 
+        const whatsappMessage = `🚨 *Application Deadline Reminder*\n\nHi! Your application for *${role}* at *${name}* is due on:\n\n📅 ${when}\n\nDon't forget to submit before the deadline!\n\nGood luck! 🍀\n\n_Automated reminder from Placement Alarm_`;
+        
         const user = await fetchUserContact(userId);
 
+        // Send Email
         if (user.email) {
-          try {
-            await sendEmail(user.email, subject, html);
-            console.log(`Email sent to ${user.email} for ${name}`);
-          } catch (err) {
-            console.error(`Failed to send email to ${user.email}:`, err);
-          }
+          await sendEmail(user.email, subject, html).catch(err => console.error(`Failed to send email to ${user.email}:`, err));
         }
 
+        // Send WhatsApp
         if (user.whatsapp) {
-          try {
-            const whatsappMessage = `🚨 *Application Deadline Reminder*\n\nHi! Your application for *${role}* at *${name}* is due on:\n\n📅 ${when}\n\nDon't forget to submit before the deadline!\n\nGood luck! 🍀\n\n_Automated reminder from Placement Alarm_`;
-            await sendWhatsApp(user.whatsapp, whatsappMessage);
-            console.log(`WhatsApp sent to ${user.whatsapp} for ${name}`);
-          } catch (err) {
-            console.error(`Failed to send WhatsApp to ${user.whatsapp}:`, err);
-          }
+          await sendWhatsApp(user.whatsapp, whatsappMessage).catch(err => console.error(`Failed to send WhatsApp to ${user.whatsapp}:`, err));
         }
 
-        // Increment reminder count
+        // Increment reminder count in Convex
         await convex.mutation(api.companies.incrementReminderCount, { id: _id });
-      })
-    );
+        remindersSentCount++;
+      }
+    }
 
-    return NextResponse.json({ sent: apps.length });
+    return NextResponse.json({ sent: remindersSentCount, checked: upcomingApps.length });
   } catch (error) {
     console.error("Error sending reminders:", error);
-    return NextResponse.json(
-      { error: "Internal Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }
