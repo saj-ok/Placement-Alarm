@@ -3,8 +3,10 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../../../convex/_generated/api";
 import { sendEmail, sendWhatsApp } from "../../../../../../lib/notifications";
 
+// Initialize Convex client
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
+// Fetch user's preferred contact methods from profile
 async function fetchUserContact(userId: string) {
   try {
     const profile = await convex.query(api.profiles.getProfileForReminder, { userId });
@@ -13,49 +15,48 @@ async function fetchUserContact(userId: string) {
       whatsapp: profile?.whatsappNumber || null,
     };
   } catch (error) {
-    console.error("Error fetching user contact:", error);
+    console.error(`Error fetching user contact for ${userId}:`, error);
     return { email: null, whatsapp: null };
   }
 }
 
+// Disable caching for this route
 export const revalidate = 0;
 
 export async function GET(_request: Request) {
   try {
-    const now = new Date().getTime();
-    // Fetch all applications due in the next 4 hours
-    const upcomingApps = await convex.query(api.companies.getApplicationsForReminder) || [];
+    const now = new Date();
+    // Fetch all applications that are due within the next 4 hours
+    const upcomingApps = await convex.query(api.companies.getApplicationsForReminder);
+
+    if (!upcomingApps || upcomingApps.length === 0) {
+      return NextResponse.json({ message: "No applications due for reminders." });
+    }
 
     let remindersSentCount = 0;
 
     for (const app of upcomingApps) {
       const { _id, name, role, deadline, remindersSent, userId } = app;
-
+      
       if (!deadline) continue;
 
-      const deadlineTime = new Date(deadline).getTime();
-      const hoursUntilDeadline = (deadlineTime - now) / (1000 * 60 * 60);
+      const deadlineDate = new Date(deadline);
+      const hoursUntilDeadline = (deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-      let shouldSend = false;
-      // Determine if a reminder should be sent based on time and count
-      if (hoursUntilDeadline <= 4 && hoursUntilDeadline > 3 && (remindersSent || 0) === 0) {
-        shouldSend = true;
-      } else if (hoursUntilDeadline <= 3 && hoursUntilDeadline > 2 && (remindersSent || 0) === 1) {
-        shouldSend = true;
-      } else if (hoursUntilDeadline <= 2 && hoursUntilDeadline > 1 && (remindersSent || 0) === 2) {
-        shouldSend = true;
-      } else if (hoursUntilDeadline <= 1 && (remindersSent || 0) === 3) {
-        shouldSend = true;
-      }
+      // Define the reminder thresholds in hours
+      const reminderThresholds = [4, 3, 2, 1];
+      const reminderIndex = (remindersSent || 0);
 
-      if (shouldSend) {
-        const when = new Date(deadline).toLocaleString("en-GB", {
+      // Check if the current time has passed the next reminder threshold
+      if (reminderIndex < reminderThresholds.length && hoursUntilDeadline <= reminderThresholds[reminderIndex]) {
+        
+        const when = deadlineDate.toLocaleString("en-GB", {
           timeZone: "Asia/Kolkata",
           dateStyle: "medium",
           timeStyle: "short",
         });
 
-        const subject = `Reminder: ${role} at ${name} deadline approaching!`;
+        const subject = `Reminder #${reminderIndex + 1}: ${role} at ${name}`;
         const html = `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
   <h2 style="color: #4F46E5;">Application Deadline Reminder</h2>
@@ -70,22 +71,19 @@ export async function GET(_request: Request) {
   <p style="font-size: 12px; color: #6B7280;">This is an automated reminder from Placement Alarm.</p>
 </div>
         `;
-
         const whatsappMessage = `🚨 *Application Deadline Reminder*\n\nHi! Your application for *${role}* at *${name}* is due on:\n\n📅 ${when}\n\nDon't forget to submit before the deadline!\n\nGood luck! 🍀\n\n_Automated reminder from Placement Alarm_`;
-        
+
         const user = await fetchUserContact(userId);
 
-        // Send Email
         if (user.email) {
-          await sendEmail(user.email, subject, html).catch(err => console.error(`Failed to send email to ${user.email}:`, err));
+            await sendEmail(user.email, subject, html).catch(err => console.error(`Failed to send email to ${user.email}:`, err));
         }
 
-        // Send WhatsApp
         if (user.whatsapp) {
-          await sendWhatsApp(user.whatsapp, whatsappMessage).catch(err => console.error(`Failed to send WhatsApp to ${user.whatsapp}:`, err));
+            await sendWhatsApp(user.whatsapp, whatsappMessage).catch(err => console.error(`Failed to send WhatsApp to ${user.whatsapp}:`, err));
         }
 
-        // Increment reminder count in Convex
+        // IMPORTANT: Increment reminder count after sending
         await convex.mutation(api.companies.incrementReminderCount, { id: _id });
         remindersSentCount++;
       }
@@ -93,7 +91,7 @@ export async function GET(_request: Request) {
 
     return NextResponse.json({ sent: remindersSentCount, checked: upcomingApps.length });
   } catch (error) {
-    console.error("Error sending reminders:", error);
-    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
+    console.error("Error in cron job:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
