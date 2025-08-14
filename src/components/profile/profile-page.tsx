@@ -7,7 +7,7 @@ import { api } from "../../../convex/_generated/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { User, Phone, Mail, Edit3, Save, X, Sparkles, ArrowLeft, Shield, Bell, Camera } from "lucide-react"
+import { User, Phone, Mail, Edit3, Save, X, Sparkles, ArrowLeft, Shield, Bell, Camera, Send } from "lucide-react"
 import toast from "react-hot-toast"
 import Image from "next/image"
 import Link from "next/link"
@@ -285,6 +285,24 @@ export function ProfilePage() {
               <p className="text-sm text-gray-400 mt-2 ml-2">
                 Include country code (e.g., +91 for India). This will be used for deadline reminder notifications.
               </p>
+              
+              {isEditing && formData.whatsappNumber && (
+                <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-300 text-sm">
+                  <p className="mb-3">
+                    <strong>Final step:</strong> Click the button below to activate reminders for your number in WhatsApp.
+                  </p>
+                  <Button asChild className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-0 shadow-lg">
+                    <a
+                      href="https://wa.me/14155238886?text=join%20yet-heard"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Activate Reminders on WhatsApp
+                    </a>
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Info Card */}
