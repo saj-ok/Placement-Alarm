@@ -37,7 +37,7 @@ export async function GET(_request: Request) {
 
     for (const app of upcomingApps) {
       const { _id, name, role, deadline, remindersSent, userId } = app;
-      
+
       if (!deadline) continue;
 
       const deadlineDate = new Date(deadline);
@@ -49,11 +49,15 @@ export async function GET(_request: Request) {
 
       // Check if the current time has passed the next reminder threshold
       if (reminderIndex < reminderThresholds.length && hoursUntilDeadline <= reminderThresholds[reminderIndex]) {
-        
-        const when = deadlineDate.toLocaleString("en-GB", {
+
+        const when = deadlineDate.toLocaleString("en-US", {
           timeZone: "Asia/Kolkata",
-          dateStyle: "medium",
-          timeStyle: "short",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
         });
 
         const subject = `Reminder #${reminderIndex + 1}: ${role} at ${name}`;
@@ -76,11 +80,11 @@ export async function GET(_request: Request) {
         const user = await fetchUserContact(userId);
 
         if (user.email) {
-            await sendEmail(user.email, subject, html).catch(err => console.error(`Failed to send email to ${user.email}:`, err));
+          await sendEmail(user.email, subject, html).catch(err => console.error(`Failed to send email to ${user.email}:`, err));
         }
 
         if (user.whatsapp) {
-            await sendWhatsApp(user.whatsapp, whatsappMessage).catch(err => console.error(`Failed to send WhatsApp to ${user.whatsapp}:`, err));
+          await sendWhatsApp(user.whatsapp, whatsappMessage).catch(err => console.error(`Failed to send WhatsApp to ${user.whatsapp}:`, err));
         }
 
         // IMPORTANT: Increment reminder count after sending
