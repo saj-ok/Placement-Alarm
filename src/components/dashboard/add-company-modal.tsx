@@ -70,7 +70,7 @@ export function AddCompanyModal({ isOpen, onClose }: AddCompanyModalProps) {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  // Helper function to combine date and time
+// Helper function to combine date and time
   const updateDeadline = () => {
     if (deadlineDate && timeHour && timeMinute) {
       // Convert 12-hour to 24-hour format
@@ -81,12 +81,13 @@ export function AddCompanyModal({ isOpen, onClose }: AddCompanyModalProps) {
         hour24 = 0
       }
       
-      const time24 = `${hour24.toString().padStart(2, '0')}:${timeMinute.padStart(2, '0')}`
-      const combinedDateTime = `${deadlineDate}T${time24}`
-      setFormData((prev) => ({ ...prev, deadline: combinedDateTime }))
+      // FIX: Create a date object from local time components and convert to UTC ISO string
+      const dateParts = deadlineDate.split("-").map(part => parseInt(part, 10));
+      const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], hour24, parseInt(timeMinute));
+      
+      setFormData((prev) => ({ ...prev, deadline: localDate.toISOString() }))
     }
   }
-
   // Update deadline when date or time changes
   useEffect(() => {
     updateDeadline()
