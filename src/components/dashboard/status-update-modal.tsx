@@ -1,3 +1,4 @@
+// src/components/dashboard/status-update-modal.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -46,13 +47,10 @@ export function StatusUpdateModal({
   const [timeAmPm, setTimeAmPm] = useState("AM");
   const company = companies.find((c) => c._id === companyId);
 
-  
   const updateCompanyDetails = useMutation(api.companies.updateCompanyDetails);
 
-  // Helper function to combine date and time
   const updateStatusDateTime = () => {
     if (statusDate && timeHour && timeMinute) {
-      // Convert 12-hour to 24-hour format
       let hour24 = parseInt(timeHour);
       if (timeAmPm === "PM" && hour24 !== 12) {
         hour24 += 12;
@@ -71,7 +69,6 @@ export function StatusUpdateModal({
       setStatus(company.status);
       setStatusDateTime("");
       setNote(company.note ?? "");
-      // Reset time fields
       setStatusDate("");
       setTimeHour("");
       setTimeMinute("");
@@ -79,24 +76,44 @@ export function StatusUpdateModal({
     }
   }, [company]);
 
-  // Update statusDateTime when date or time changes
   useEffect(() => {
     updateStatusDateTime();
   }, [statusDate, timeHour, timeMinute, timeAmPm]);
 
   const handleUpdate = async () => {
-    if (!companyId || !status || !statusDate || !timeHour || !timeMinute) return;
+    if (!companyId) return;
 
     setIsLoading(true);
     try {
-      await updateCompanyDetails({
-        companyId,
-        status,
-        statusDateTime,
-        notes: note,
-      });
-      toast.success("Status updated successfully");
-      onClose();
+      const patchData: { 
+        status?: string;
+        statusDateTime?: string;
+        notes?: string;
+      } = {};
+
+      if (status !== company?.status) {
+        patchData.status = status;
+      }
+      if (statusDateTime !== "" && statusDateTime !== company?.statusDateTime) {
+        patchData.statusDateTime = statusDateTime;
+      }
+      if (note !== company?.note) {
+        patchData.notes = note;
+      }
+
+      // Only call the mutation if there are changes to be made
+      if (patchData.status || patchData.statusDateTime || patchData.notes) {
+        await updateCompanyDetails({
+          companyId,
+          ...patchData,
+        });
+        toast.success("Status updated successfully");
+        onClose();
+      } else {
+        toast.error("No changes detected");
+        onClose();
+      }
+
     } catch (error) {
       toast.error("Failed to update status");
     } finally {
@@ -114,7 +131,6 @@ export function StatusUpdateModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Status selector */}
           <div className="space-y-2">
             <Label htmlFor="status" className="text-gray-300">
             Status
@@ -146,19 +162,17 @@ export function StatusUpdateModal({
 
           </div>
           
-          {/* Status Date Time */}
           <div className="space-y-2">
             <Label htmlFor="statusDateTime" className="text-gray-300">
-              Status Date & Time
+              Status Date & Time (Optional)
             </Label>
-            <div className="space-y-2 flex  gap-4">
+            <div className="space-y-2 flex gap-4">
               <Input
                 type="date"
                 id="status-date"
                 value={statusDate}
                 onChange={(e) => setStatusDate(e.target.value)}
                 className={`bg-gray-700 border-gray-600 ${statusDate ? 'text-white' : 'text-gray-400'} placeholder:text-gray-400`}
-                required
               />
               <div className="flex gap-2">
                 <Select value={timeHour} onValueChange={setTimeHour}>
@@ -198,7 +212,6 @@ export function StatusUpdateModal({
             </div>
           </div>
           
-          {/* Note textarea */}
           <div className="flex flex-col">
             <Label htmlFor="company-note" className="mb-1 text-gray-300">
               Add a Note (optional)
@@ -224,7 +237,7 @@ export function StatusUpdateModal({
           </Button>
           <Button
             onClick={handleUpdate}
-            disabled={!status || !statusDate || !timeHour || !timeMinute || isLoading}
+            disabled={isLoading || !companyId}
             className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0"
           >
             {isLoading ? (
