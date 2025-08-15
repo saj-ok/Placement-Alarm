@@ -12,6 +12,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { api } from "../../../../convex/_generated/api"
 import ProfileInfoCard from "@/components/profile/profile-infoCard"
+import LoadingSkeleton from "@/components/profile/loading-skeleton"
 
 export default function Profile() {
   const { user, isLoaded } = useUser()
@@ -23,26 +24,23 @@ export default function Profile() {
     whatsappNumber: "",
   })
 
-
-
   const profile = useQuery(
     api.profiles.getUserProfile,
     user?.id ? { userId: user.id } : "skip"
   )
 
-  
   const upsertProfile = useMutation(api.profiles.upsertProfile)
   const updateProfileImage = useMutation(api.profiles.updateProfileImage)
 
   useEffect(() => {
-    if (user && isLoaded) {
+    if (profile) {
       setFormData({
-        name: profile?.name || user.fullName || "",
-        email: profile?.email || user.primaryEmailAddress?.emailAddress || "",
-        whatsappNumber: profile?.whatsappNumber || "",
+        name: profile.name || "",
+        email: profile.email || "",
+        whatsappNumber: profile.whatsappNumber || "",
       })
     }
-  }, [user, profile, isLoaded])
+  }, [profile])
 
   const handleSave = async () => {
     if (!user) return
@@ -53,7 +51,7 @@ export default function Profile() {
         name: formData.name,
         email: formData.email,
         whatsappNumber: formData.whatsappNumber || undefined,
-        profileImage: user.imageUrl || undefined,
+        profileImage: profile?.profileImage || user.imageUrl || undefined,
       })
       
       toast.success("Profile updated successfully!")
@@ -65,11 +63,11 @@ export default function Profile() {
   }
 
   const handleCancel = () => {
-    if (user && isLoaded) {
+    if (profile) {
       setFormData({
-        name: profile?.name || user.fullName || "",
-        email: profile?.email || user.primaryEmailAddress?.emailAddress || "",
-        whatsappNumber: profile?.whatsappNumber || "",
+        name: profile.name || "",
+        email: profile.email || "",
+        whatsappNumber: profile.whatsappNumber || "",
       })
     }
     setIsEditing(false)
@@ -108,38 +106,12 @@ export default function Profile() {
     }
   }
 
-
   const updateField = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 relative overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
-        
-        <div className="relative z-10 max-w-4xl mx-auto px-6 py-12">
-          <div className="bg-gray-800/40 backdrop-blur-xl rounded-3xl border border-gray-700/50 shadow-2xl p-8">
-            <div className="animate-pulse space-y-8">
-              <div className="flex items-center justify-center">
-                <div className="h-32 w-32 bg-gray-700 rounded-full"></div>
-              </div>
-              <div className="space-y-6">
-                <div className="h-6 bg-gray-700 rounded w-1/3 mx-auto"></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="h-12 bg-gray-700 rounded-xl"></div>
-                  <div className="h-12 bg-gray-700 rounded-xl"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+  if (!isLoaded || profile === undefined) {
+       return <LoadingSkeleton />
   }
 
   if (!user) {
@@ -330,7 +302,7 @@ export default function Profile() {
                 disabled={!isEditing}
                 className={`h-14 bg-gray-700/30 border-gray-600/50 text-white placeholder:text-gray-400 transition-all duration-300 rounded-xl text-lg ${
                   isEditing ? "focus:border-purple-500 focus:bg-gray-700/50 focus:shadow-lg focus:shadow-purple-500/20" : "opacity-70"
-                }`}
+                  }`}
                 placeholder="+91 9876543210"
               />
               <p className="text-sm text-gray-400 mt-2 ml-2">

@@ -25,7 +25,6 @@ export default defineSchema({
       }).index("by_user_id", ["userId"])
         .index("by_deadline", ["deadline"]),
 
-      // Added profile table to store user profile information including WhatsApp number
       profiles: defineTable({
             userId: v.string(),
             name: v.string(),
