@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-// Create or update user profile
+
 export const upsertProfile = mutation({
   args: {
     userId: v.string(),
@@ -38,7 +38,7 @@ export const upsertProfile = mutation({
   },
 });
 
-// Get user profile
+
 export const getUserProfile = query({
   args: {
     userId: v.string(),
@@ -57,7 +57,6 @@ export const getUserProfile = query({
   },
 });
 
-// Update WhatsApp number specifically
 export const updateWhatsAppNumber = mutation({
   args: {
     userId: v.string(),
@@ -85,16 +84,30 @@ export const updateWhatsAppNumber = mutation({
   },
 });
 
-// Get profile by user ID for reminder system
-export const getProfileForReminder = query({
-  args: {
+
+export const updateProfileImage = mutation({
+   args:{
     userId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("profiles")
-      .withIndex("by_user_id")
-      .filter(q => q.eq(q.field("userId"), args.userId))
-      .first();
-  },
-});
+    profileImage: v.string(),
+   },
+   handler: async (ctx, args) => {
+     const identity = await ctx.auth.getUserIdentity();
+     if (!identity) {
+       throw new Error("Unauthorized");
+     }
+
+     const profile = await ctx.db
+       .query("profiles")
+       .withIndex("by_user_id")
+       .filter(q => q.eq(q.field("userId"), args.userId))
+       .first();
+
+     if (!profile) {
+       throw new Error("Profile not found");
+     }
+
+     return await ctx.db.patch(profile._id, {
+       profileImage: args.profileImage,
+     });
+   },
+})

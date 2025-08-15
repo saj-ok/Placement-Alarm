@@ -1,36 +1,39 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { SignedIn, SignedOut, SignOutButton, useUser } from "@clerk/nextjs"
+import { SignedIn, SignOutButton, useUser } from "@clerk/nextjs"
 import { useMutation, useQuery } from "convex/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { User, Phone, Mail, Edit3, Save, X, Sparkles, ArrowLeft, Shield, Bell, Camera, Send } from "lucide-react"
+import { User, Phone, Mail, Edit3, Save, X,  ArrowLeft, Shield, Bell, Camera, Send, Loader } from "lucide-react"
 import toast from "react-hot-toast"
 import Image from "next/image"
 import Link from "next/link"
 import { api } from "../../../../convex/_generated/api"
+import ProfileInfoCard from "@/components/profile/profile-infoCard"
 
 export default function Profile() {
   const { user, isLoaded } = useUser()
   const [isEditing, setIsEditing] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     whatsappNumber: "",
   })
 
-  // Get user profile from Convex
+
+
   const profile = useQuery(
     api.profiles.getUserProfile,
     user?.id ? { userId: user.id } : "skip"
   )
 
-  // Mutation to update profile
+  
   const upsertProfile = useMutation(api.profiles.upsertProfile)
+  const updateProfileImage = useMutation(api.profiles.updateProfileImage)
 
-  // Initialize form data when user or profile loads
   useEffect(() => {
     if (user && isLoaded) {
       setFormData({
@@ -62,7 +65,6 @@ export default function Profile() {
   }
 
   const handleCancel = () => {
-    // Reset form data to original values
     if (user && isLoaded) {
       setFormData({
         name: profile?.name || user.fullName || "",
@@ -72,6 +74,40 @@ export default function Profile() {
     }
     setIsEditing(false)
   }
+ 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      setIsUploading(true);
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const base64String = e.target?.result as string;
+          if (base64String && user?.id) {
+            await updateProfileImage({ 
+              userId: user.id, 
+              profileImage: base64String 
+            });
+            toast.success("Profile image updated successfully!");
+          }
+        } catch (error) {
+          console.error("Image upload error:", error);
+          toast.error("Failed to update profile image");
+        } finally {
+          setIsUploading(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast.error("Failed to update profile image");
+      setIsUploading(false);
+    }
+  }
+
 
   const updateField = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -146,14 +182,28 @@ export default function Profile() {
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
                 <div className="relative">
                   <Image
-                    src={profile?.profileImage || user.imageUrl || "/default-avatar.png"}
+                    src={profile?.profileImage  || "/default-avatar.png"}
                     alt="Profile"
                     width={120}
                     height={120}
                     className="rounded-full border-4 border-gray-700/50 shadow-2xl"
                   />
                   <div className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-purple-900 to-gray-900 rounded-full shadow-lg">
-                    <Camera className="h-4 w-4 text-white" />
+                    <label htmlFor="profileImageUpload" className={`hover:cursor-pointer ${isUploading ? 'cursor-not-allowed' : ''}`}>
+                      {isUploading ? (
+                        <Loader className="h-4 w-4 text-white animate-spin" />
+                      ) : (
+                        <Camera className="h-4 w-4 text-white" />
+                      )}
+                    </label>
+                    <input
+                      id="profileImageUpload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                      disabled={isUploading}
+                    />
                   </div>
                 </div>
               </div>
@@ -307,32 +357,7 @@ export default function Profile() {
             </div>
 
             {/* Info Card */}
-            <div className="mt-8 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-blue-500/20 rounded-2xl p-6">
-              <div className="flex items-start space-x-4">
-                <div className="p-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl">
-                  <Bell className="h-6 w-6 text-blue-400" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-blue-400 font-semibold text-lg mb-2 flex items-center gap-2">
-                    Smart Deadline Reminders
-                    <Sparkles className="h-4 w-4 text-yellow-400 animate-pulse" />
-                  </h4>
-                  <p className="text-gray-300 leading-relaxed">
-                    Add your WhatsApp number to receive automated reminders about upcoming application deadlines. 
-                    You'll get notifications 4 hours, 3 hours, and 2 hours before each deadline to ensure you never miss an opportunity.
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm border border-purple-500/30">
-                      Email Notifications
-                    </span>
-                    <span className="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm border border-green-500/30">
-                      WhatsApp Alerts
-                    </span>
-                    
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ProfileInfoCard />
           </div>
         </div>
       </div>

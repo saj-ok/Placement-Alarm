@@ -9,7 +9,7 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 // Fetch user's preferred contact methods from profile
 async function fetchUserContact(userId: string) {
   try {
-    const profile = await convex.query(api.profiles.getProfileForReminder, { userId });
+    const profile = await convex.query(api.profiles.getUserProfile, { userId });
     return {
       email: profile?.email || null,
       whatsapp: profile?.whatsappNumber || null,
