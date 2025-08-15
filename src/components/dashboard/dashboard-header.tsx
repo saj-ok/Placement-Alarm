@@ -47,22 +47,7 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex items-start gap-16">
-          {/* Profile Access Button - Creative floating design */}
-          <SignedIn>
-            <Link href="/profile">
-              <div className="group relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-300 group-hover:duration-200 animate-pulse"></div>
-                <div className="relative bg-gray-900 rounded-full p-3 hover:bg-gray-800 transition-all duration-300 transform hover:scale-110 border border-purple-500/30">
-                  <User className="h-5 w-5 text-purple-400 group-hover:text-purple-300" />
-                </div>
-                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="bg-gray-800 text-white text-xs px-2 py-1 rounded border border-gray-700 whitespace-nowrap">
-                    Profile Settings
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </SignedIn>
+         
 
           <Button
             onClick={handleAddCompany}
@@ -84,7 +69,22 @@ export function DashboardHeader() {
             </SignInButton>
 
           </Unauthenticated>
-          <SignedIn><UserButton /></SignedIn>
+           {/* Profile Access Button - Creative floating design */}
+          <SignedIn>
+            <Link href="/profile">
+              <div className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-300 group-hover:duration-200 animate-pulse"></div>
+                <div className="relative bg-gray-900 rounded-full p-3 hover:bg-gray-800 transition-all duration-300 transform hover:scale-110 border border-purple-500/30">
+                  <User className="h-5 w-5 text-purple-400 group-hover:text-purple-300" />
+                </div>
+                <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="bg-gray-800 text-white text-xs px-2 py-1 rounded border border-gray-700 whitespace-nowrap">
+                    Profile Settings
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </SignedIn>
 
         </div>
       </div>
