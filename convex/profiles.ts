@@ -85,6 +85,20 @@ export const updateWhatsAppNumber = mutation({
 });
 
 
+export const getProfileForReminder = query({
+  args: {
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("profiles")
+      .withIndex("by_user_id")
+      .filter(q => q.eq(q.field("userId"), args.userId))
+      .first();
+  },
+});
+
+
 export const updateProfileImage = mutation({
    args:{
     userId: v.string(),
