@@ -30,7 +30,7 @@ export function AddCompanyModal({ isOpen, onClose }: AddCompanyModalProps) {
     deadline: "",
     link: "",
     type: "",
-    status: "",
+    status: "Not Applied",
   })
   const [deadlineDate, setDeadlineDate] = useState("")
   const [timeHour, setTimeHour] = useState("")
