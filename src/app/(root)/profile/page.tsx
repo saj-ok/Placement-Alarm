@@ -316,7 +316,7 @@ export default function Profile() {
                   </p>
                   <Button asChild className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-0 shadow-lg">
                     <a
-                      href="https://wa.me/14155238886?text=join%20yet-heard"
+                      href="https://wa.me/14155238886?text=join%20girl-examine"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
