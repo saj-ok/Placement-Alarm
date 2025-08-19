@@ -1,6 +1,6 @@
 # Placement Alarm
 
-![Placement Alarm Logo](/public/logo1.png)
+![Placement Alarm Logo](/public/placement.png)
 
 A platform to help students track and manage their placement process effectively.
 
