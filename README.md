@@ -1,6 +1,6 @@
 # Placement Alarm
 
-![Placement Alarm Logo](bhsajuu/placement-alarm/Placement-Alarm-a5bec51d6341d97fcfead7ed04cbe9f364c463de/public/logo1.png)
+![Placement Alarm Logo](logo1.png)
 
 A platform to help students track and manage their placement process effectively.
 
