@@ -1,7 +1,30 @@
-Need improment:
+# Placement Alarm
 
-1. Profile page slow loading problem :Convrt the user image into a url using any third party api then save the url in the database 
-2. Add pagination to Company list on the table , at time only load 5 company for faster loading.
-3. Status-update-model issue : Its Should independently update each filed withoout depending on the other filed , for example if we want to change the status field then it should not affect the other field like Date&time and Note , they should be keep same as it before until the user made any  changes in that fields and Do not make thier value null if there is no changes in those fields .
-4. Notification timing issue :  The Two notication should send in time interval of 60 minutes.
-5. 
+![Placement Alarm Logo](bhsajuu/placement-alarm/Placement-Alarm-a5bec51d6341d97fcfead7ed04cbe9f364c463de/public/logo1.png)
+
+A platform to help students track and manage their placement process effectively.
+
+## ✨ Features
+
+* **Dashboard:** Get a quick overview of your application stats, including total applications, active interviews, offers, and rejections.
+* **Company Directory:** A centralized place to manage all your job applications.
+* **Add and Track Applications:** Easily add new company applications with details like role, package, deadline, and application link.
+* **Smart Deadline Reminders:** Receive automated reminders for upcoming application deadlines via WhatsApp and Email.
+* **User Authentication:** Secure user authentication powered by Clerk.
+* **Profile Management:** Manage your profile information, including your name, email, and WhatsApp number for notifications.
+
+## 🚀 Technologies Used
+
+* **Framework:** Next.js
+* **Database:** Convex
+* **Authentication:** Clerk
+* **Styling:** Tailwind CSS, shadcn/ui
+* **Notifications:** Twilio (for WhatsApp), Nodemailer (for Email)
+* **Deployment:** Vercel
+
+## 📈 Future Improvements
+
+* **Profile Page Performance:** Optimize the loading time of the profile page by converting user images to URLs using a third-party API and storing the URL in the database.
+* **Pagination:** Implement pagination for the company list on the dashboard to improve performance with a large number of applications.
+* **Independent Field Updates:** Enhance the status update modal to allow independent updating of each field without affecting others.
+* **Notification Timing:** Adjust the notification timing to send reminders at 60-minute intervals.
