@@ -1,9 +1,126 @@
-import React from 'react'
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, FileText, Sparkles, Target, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import ScoreCircle from "./ScoreCircle"; // Assuming this component exists
+import CategoryScore from "./CategoryScore"; // Assuming this component exists
 
-function AnalyzerResult() {
+function AnalyzerResult({ result, history }: { result: any, history: any[] | undefined }) {
+  if (!result) {
+    return (
+      <div className="text-center py-16">
+        <div className="mx-auto h-16 w-16 bg-gradient-to-r from-gray-700 to-gray-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
+          <FileText className="h-6 w-6 text-gray-400" />
+        </div>
+        <p className="text-gray-300 text-lg font-medium">
+          Your analysis results will appear here.
+        </p>
+        {history && history.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold text-white mb-4">Recent Analyses</h3>
+            <div className="space-y-2 max-w-md mx-auto">
+              {history.map((item) => (
+                <div key={item._id} className="bg-gray-800/50 p-3 rounded-lg text-left">
+                  <p className="text-white font-medium truncate">{item.jobDescription}</p>
+                  <p className="text-sm text-gray-400">Score: {item.overallScore}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div>AnalyzerResult</div>
-  )
+    <div className="space-y-8">
+      <Card className="bg-gray-800/40 border-gray-700/50">
+        <CardHeader>
+          <CardTitle className="text-3xl text-white flex items-center gap-3">
+            <Sparkles size={28} className="text-yellow-300" />
+            Resume Analysis Report
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-10">
+          {/* Overall Score & Summary */}
+          <div className="flex flex-col md:flex-row items-center gap-8 p-6 bg-gray-900/30 rounded-lg border border-gray-700/50">
+            <ScoreCircle score={result.overall_score} />
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-white mb-2">Overall Match</h3>
+              <p className="text-slate-300 mb-4">{result.summary}</p>
+              <div className="p-4 bg-gray-800/50 rounded-md">
+                <h4 className="font-semibold text-purple-400 mb-1">Recruiter's First Impression:</h4>
+                <p className="text-slate-300 italic">"{result.first_impression}"</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Categorical Scores & ATS */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <h4 className="text-xl font-semibold text-white flex items-center gap-2"><BarChart size={20} /> Categorical Breakdown</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {result.categorical_scores.map((cat: any) => <CategoryScore key={cat.category} {...cat} />)}
+              </div>
+            </div>
+            <div className="p-6 bg-gray-900/50 rounded-lg border border-gray-700/50">
+              <h4 className="text-xl font-semibold text-white mb-3">ATS Compatibility</h4>
+              <div className="flex items-center gap-4 mb-4">
+                <div className={`text-3xl font-bold ${result.ats_compatibility.score > 70 ? 'text-green-400' : 'text-yellow-400'}`}>
+                  {result.ats_compatibility.score}%
+                </div>
+                <p className="text-slate-400 text-sm">Your resume's compatibility with Applicant Tracking Systems.</p>
+              </div>
+              <div className="space-y-2">
+                {result.ats_compatibility.suggestions.map((sugg: string, index: number) => (
+                  <div key={index} className="flex items-start gap-2 text-sm text-slate-300">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
+                    <span>{sugg}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+
+          {/* Missing Keywords */}
+          {result.missing_keywords.length > 0 && (
+            <div>
+              <h4 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                <AlertCircle size={20} className="text-red-400" /> Missing Keywords
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {result.missing_keywords.map((keyword: string) => (
+                  <span key={keyword} className="px-3 py-1 bg-red-500/20 text-red-300 text-sm font-medium rounded-full border border-red-500/30">{keyword}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Actionable Suggestions */}
+          <div>
+            <h4 className="text-xl font-semibold text-white mb-4">Actionable Suggestions</h4>
+            <div className="space-y-4">
+              {result.actionable_suggestions.map((sugg: any, index: number) => (
+                <div key={index} className="p-4 bg-gray-900/50 rounded-lg border border-gray-700">
+                  <p className="font-semibold text-purple-400 text-lg mb-2">{sugg.area}</p>
+                  <p className="text-white mb-3">{sugg.suggestion}</p>
+                  {sugg.example.before && (
+                    <div className="p-2 bg-red-900/30 rounded-md mb-2">
+                      <p className="text-sm text-red-300 italic">"<del>{sugg.example.before}</del>"</p>
+                    </div>
+                  )}
+                  <div className="p-2 bg-green-900/30 rounded-md flex items-center gap-2">
+                    <ArrowRight size={16} className="text-green-400" />
+                    <p className="text-sm text-green-300 italic">"{sugg.example.after}"</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
-export default AnalyzerResult
+export default AnalyzerResult;

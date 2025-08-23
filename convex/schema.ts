@@ -32,4 +32,12 @@ export default defineSchema({
             whatsappNumber: v.optional(v.string()),
             profileImage: v.optional(v.string()),
       }).index("by_user_id", ["userId"]),
+
+        analyses: defineTable({
+        userId: v.string(),
+        jobDescription: v.string(),
+        resumeText: v.string(),
+        analysis: v.any(), 
+        overallScore: v.number(),
+      }).index("by_user_id", ["userId"]),
 })

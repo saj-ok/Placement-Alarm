@@ -44,7 +44,7 @@ export default function JobDescriptionInput({
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="text" className="space-y-5 mt-5  flex-1 flex flex-col">
+            <TabsContent value="text" className=" overflow-hidden space-y-5 mt-5  flex-1 flex flex-col">
               <Textarea
                 value={jobDescription}
                 onChange={(e) => onJobDescriptionChange(e.target.value)}
