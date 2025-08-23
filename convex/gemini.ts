@@ -132,3 +132,39 @@ export const getAnalysisById = query({
         return analysis;
     },
 });
+
+export const generateResume = action({
+  args: {
+    resumeText: v.string(),
+    suggestions: v.any(), // Pass the suggestions from the analysis
+  },
+  handler: async (_, { resumeText, suggestions }) => {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const prompt = `
+      You are a professional resume writer.
+      Your task is to rewrite the "Original Resume" by applying the "Improvement Suggestions".
+      The output must be only the full, revised resume text. Do not include any commentary, explanations, or markdown formatting.
+      Maintain a professional tone and structure. Ensure the final output is clean and ready to be copied into a document.
+
+      --- Improvement Suggestions ---
+      ${JSON.stringify(suggestions, null, 2)}
+      ---
+
+      --- Original Resume ---
+      ${resumeText}
+      ---
+
+      Now, provide the full, rewritten resume text below:
+    `;
+
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error("Error generating resume with Gemini:", error);
+      throw new Error("Failed to generate resume from Gemini API.");
+    }
+  },
+});

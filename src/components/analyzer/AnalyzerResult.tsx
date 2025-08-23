@@ -1,12 +1,42 @@
+"use client";
+
 import React from 'react';
-import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, FileText, Sparkles, Target, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import { BarChart, FileText, Sparkles,  Download, Loader2, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
 import ScoreCircle from "./ScoreCircle";
 import CategoryScore from "./CategoryScore";
+import { AnalysisHistoryCard } from './AnalysisHistoryCard'; // Import the new card
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { useAction } from 'convex/react';
+import toast from 'react-hot-toast';
+import { api } from '../../../convex/_generated/api';
 
-function AnalyzerResult({ result, history }: { result: any, history: any[] | undefined }) {
-  if (!result) {
+
+function AnalyzerResult({ result, history, onGenerateResume }: { result: any, history: any[] | undefined, onGenerateResume: (text: string) => void }) {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const generateResumeAction = useAction(api.gemini.generateResume);
+
+  const handleGenerateClick = async () => {
+    if (!result) return;
+    setIsGenerating(true);
+    try {
+      const originalResumeText = "...."; // You will need to pass the original resume text down to this component
+      const generatedText = await generateResumeAction({
+        resumeText: originalResumeText, // This needs to be available here
+        suggestions: result.actionable_suggestions,
+      });
+      onGenerateResume(generatedText);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to generate resume.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+
+    if (!result) {
     return (
       <div className="text-center py-16">
         <div className="mx-auto h-16 w-16 bg-gradient-to-r from-gray-700 to-gray-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
@@ -16,16 +46,17 @@ function AnalyzerResult({ result, history }: { result: any, history: any[] | und
           Your analysis results will appear here.
         </p>
         {history && history.length > 0 && (
-          <div className="mt-8">
-            <h3 className="text-xl font-semibold text-white mb-4">Recent Analyses</h3>
-            <div className="space-y-2 max-w-md mx-auto">
+          <div className="mt-12 max-w-5xl mx-auto">
+            <h3 className="text-2xl font-semibold text-white mb-6">Recent Analyses</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {history.map((item) => (
-                <Link key={item._id} href={`/analyzer/${item._id}`}>
-                  <div className="bg-gray-800/50 p-3 rounded-lg text-left hover:bg-gray-700/50 cursor-pointer transition-colors">
-                    <p className="text-white font-medium truncate">{item.jobDescription}</p>
-                    <p className="text-sm text-gray-400">Score: {item.overallScore}</p>
-                  </div>
-                </Link>
+                <AnalysisHistoryCard
+                  key={item._id}
+                  id={item._id}
+                  score={item.overallScore}
+                  jobDescription={item.jobDescription}
+                  createdAt={item._creationTime}
+                />
               ))}
             </div>
           </div>
@@ -33,14 +64,31 @@ function AnalyzerResult({ result, history }: { result: any, history: any[] | und
       </div>
     );
   }
+
   return (
+    // ... existing result display logic
     <div className="space-y-8">
       <Card className="bg-gray-800/40 border-gray-700/50">
         <CardHeader>
-          <CardTitle className="text-3xl text-white flex items-center gap-3">
-            <Sparkles size={28} className="text-yellow-300" />
-            Resume Analysis Report
-          </CardTitle>
+             <div className="flex justify-between items-center">
+            <CardTitle className="text-3xl text-white flex items-center gap-3">
+              <Sparkles size={28} className="text-yellow-300" />
+              Resume Analysis Report
+            </CardTitle>
+            <Button onClick={handleGenerateClick} disabled={isGenerating}>
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Generate & Edit Resume
+                </>
+              )}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-10">
           {/* Overall Score & Summary */}

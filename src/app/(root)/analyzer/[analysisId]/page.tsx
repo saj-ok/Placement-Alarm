@@ -42,7 +42,7 @@ export default function AnalysisDetailPage({ params }: { params: { analysisId: I
           &larr; Back to Analyzer
         </Link>
       </div>
-      <AnalyzerResult result={analysis.analysis} history={[]} />
+      <AnalyzerResult result={analysis.analysis} history={[]} onGenerateResume={() => {}} />
     </DashboardLayout>
   );
 }
