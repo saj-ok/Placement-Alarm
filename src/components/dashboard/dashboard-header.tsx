@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Sparkles, LogIn, User } from "lucide-react"
+import { Plus, Sparkles, LogIn, User, BrainCircuit } from "lucide-react"
 import { AddCompanyModal } from "./add-company-modal"
-import { SignedIn, SignInButton, UserButton } from "@clerk/nextjs"
+import { SignedIn, SignInButton } from "@clerk/nextjs"
 import { Unauthenticated } from "convex/react"
 import { useAuth } from "@clerk/nextjs"
 import toast from "react-hot-toast"
@@ -47,7 +47,15 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex items-start gap-16">
-         
+           <Link href="/analyzer">
+            <Button
+              variant="outline"
+              className="bg-gray-700/50 border-gray-600/50 text-white hover:bg-gray-600/70"
+            >
+              <BrainCircuit className="h-4 w-4 mr-2" />
+              AI Resume Analyzer
+            </Button>
+          </Link>
 
           <Button
             onClick={handleAddCompany}
@@ -56,7 +64,7 @@ export function DashboardHeader() {
             <Plus className="h-4 w-4 mr-2" />
             Add Company
           </Button>
-
+          
           <Unauthenticated>
             <SignInButton mode="modal">
               <div

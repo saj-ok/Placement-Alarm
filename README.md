@@ -28,3 +28,8 @@ A platform to help students track and manage their placement process effectively
 * **Pagination:** Implement pagination for the company list on the dashboard to improve performance with a large number of applications.
 * **Independent Field Updates:** Enhance the status update modal to allow independent updating of each field without affecting others.
 * **Notification Timing:** Adjust the notification timing to send reminders at 60-minute intervals.
+
+
+
+
+   - Option to download the improved resume version (optional bonus feature).  
