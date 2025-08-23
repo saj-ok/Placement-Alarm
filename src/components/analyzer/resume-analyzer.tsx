@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileUp, BrainCircuit, Loader2, Target, Briefcase, Sparkles, Wand2, ArrowRight } from "lucide-react";
+import { FileUp, Loader2, Target, Sparkles, Wand2, ArrowRight} from "lucide-react";
 import { useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import mammoth from "mammoth";
@@ -11,12 +11,17 @@ import ScoreCircle from "./ScoreCircle";
 import CategoryScore from "./CategoryScore";
 import { parsePdf } from "@/lib/parsePdf";
 import toast from "react-hot-toast";
+import FileUploadZone from "./FileUploadZone";
+import JobDescriptionInput from "./JobDesInput";
 
 export function ResumeAnalyzer() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState<string>("");
+  const [jobDescriptionFile, setJobDescriptionFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
   const analyze = useAction(api.gemini.analyzeResume);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,13 +35,15 @@ export function ResumeAnalyzer() {
       toast.error("Please upload a resume.");
       return;
     }
-    if (!jobDescription) {
+    if (!jobDescription || !jobDescriptionFile) {
       toast.error("Please provide a job description.");
       return;
     }
     setIsLoading(true);
     setAnalysis(null);
+
     try {
+      // Parse resume text
       let resumeText = "";
       if (resumeFile.type === "application/pdf") {
         resumeText = await parsePdf(resumeFile);
@@ -47,14 +54,31 @@ export function ResumeAnalyzer() {
         const result = await mammoth.extractRawText({ arrayBuffer });
         resumeText = result.value;
       } else {
-        alert("Unsupported file type. Please upload a PDF or DOCX file.");
+        toast.error("Unsupported file type. Please upload a PDF or DOCX file.");
         setIsLoading(false);
         return;
       }
 
+      // Parse job description text
+      let jobDescriptionText = "";
+      if (jobDescriptionFile.type === "application/pdf") {
+        jobDescriptionText = await parsePdf(jobDescriptionFile);
+      } else if (
+        jobDescriptionFile.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ) {
+        const arrayBuffer = await jobDescriptionFile.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        jobDescriptionText = result.value;
+      } else {
+        toast.error("Unsupported file type. Please upload a PDF or DOCX file.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Run analysis
       const result = await analyze({
         resumeText: resumeText,
-        jobDescriptionText: jobDescription,
+        jobDescriptionText: jobDescription || jobDescriptionText,
       });
       setAnalysis(result);
     } catch (error) {
@@ -67,56 +91,55 @@ export function ResumeAnalyzer() {
 
   return (
     <div className="space-y-8">
-      {/* Input Card */}
-      <Card className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 border-gray-700/50 backdrop-blur-sm shadow-2xl">
-        <CardHeader>
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg">
-              <BrainCircuit className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-2xl text-white font-bold">
-                AI Resume Analyzer
-              </CardTitle>
-              <p className="text-sm text-slate-300 mt-1 font-medium">
-                Get instant feedback on your resume against a job description.
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Resume Upload */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2"><FileUp size={20} /> Upload Your Resume</h3>
-            <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-800/50 hover:bg-gray-700/50">
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <FileUp className="w-8 h-8 mb-4 text-gray-400" />
-                <p className="mb-2 text-sm text-gray-400"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                <p className="text-xs text-gray-400">PDF or DOCX</p>
-              </div>
-              <input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept=".pdf,.docx" />
-            </label>
-            {resumeFile && <p className="text-sm text-green-400">Uploaded: {resumeFile.name}</p>}
-          </div>
-          {/* Job Description */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2"><Briefcase size={20} /> Paste Job Description</h3>
-            <textarea
-              className="w-full h-48 p-4 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder:text-gray-400 focus:ring-purple-500 focus:border-purple-500"
-              placeholder="Paste the job description here..."
-              value={jobDescription}
-              onChange={(e) => setJobDescription(e.target.value)}
-            />
-          </div>
-        </CardContent>
-        <div className="p-6 text-center">
-          <Button onClick={handleAnalyze} disabled={isLoading} className="text-base font-semibold py-6 bg-blue-500 hover:bg-blue-600 text-white border-0 shadow-xl">
-            {isLoading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</> : <><Wand2 className="mr-2 h-5 w-5" /> Analyze Resume</>}
-          </Button>
-        </div>
-      </Card>
+      <div className="text-center space-y-4 mb-12">
+        <h1 className="text-5xl font-bold text-white tracking-tight">
+          Optimize Your Resume
+        </h1>
+        <p className="text-xl text-gray-400 max-w-4xl mx-auto leading-relaxed">
+          Get AI-powered insights on how well your resume matches any job description, with specific suggestions for improvement.
+        </p>
+      </div>
 
-      {/* Results Card */}
+      <div className="flex flex-col lg:flex-row justify-center items-center gap-6 mb-12">
+        <FileUploadZone
+          title="Upload Resume"
+          description="Upload your resume in PDF or DOCX format"
+          acceptedTypes=".pdf,.docx"
+          onFileSelect={handleFileChange}
+          icon={FileUp}
+          file={resumeFile ?? undefined}
+          dragActive={isDragging}
+        />
+       <JobDescriptionInput
+        jobDescription={jobDescription}
+        onJobDescriptionChange={setJobDescription}
+        jobFile={jobDescriptionFile}
+        onJobFileSelect={setJobDescriptionFile}
+        dragActive={isDragging}
+        />
+      </div>
+
+      <div className="text-center">
+        <Button 
+          onClick={handleAnalyze} 
+          disabled={isLoading} 
+          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0 shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 transform hover:scale-105 px-8 py-4 text-lg font-semibold"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" /> 
+              Analyzing...
+            </>
+          ) : (
+            <>
+              <Wand2 className="mr-2 h-5 w-5" /> 
+              Analyze Resume
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Results Card - No changes to the results section */}
       {analysis && (
         <Card className="bg-gray-800/40 border-gray-700/50">
           <CardHeader>
