@@ -34,11 +34,11 @@ export default function JobDescriptionInput({
         <CardContent className="h-[calc(100%-80px)] flex flex-col">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="pb-9 grid w-full grid-cols-2 mb-4 bg-gray-700/50 border border-gray-600/50">
-              <TabsTrigger value="text" className="flex items-center space-x-2">
+              <TabsTrigger value="text" className={`flex items-center space-x-2 ${activeTab === "text" ? "text-black" : "text-white"}`}>
                 <Type className="w-4 h-4" />
                 <span>Paste Text</span>
               </TabsTrigger>
-              <TabsTrigger value="upload" className="flex items-center space-x-2">
+              <TabsTrigger value="upload" className={`flex items-center space-x-2 ${activeTab === "upload" ? "text-black" : "text-white"}`}>
                 <Upload className="w-4 h-4" />
                 <span>Upload File</span>
               </TabsTrigger>
@@ -49,7 +49,7 @@ export default function JobDescriptionInput({
                 value={jobDescription}
                 onChange={(e) => onJobDescriptionChange(e.target.value)}
                 placeholder="Paste the job description here... Include job title, responsibilities, requirements, and qualifications for best results."
-                className="min-h-[200px] resize-none border-slate-200 focus:border-blue-400 transition-colors"
+                className="h-[200px]  resize-none border-slate-200 focus:border-blue-400 transition-colors overflow-y-auto"
               />
               <p className="text-xs text-gray-400">
                 Tip: Include job title, company name, requirements, and responsibilities for more accurate analysis.

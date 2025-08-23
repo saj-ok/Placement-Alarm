@@ -1,8 +1,9 @@
 import React from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, FileText, Sparkles, Target, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
-import ScoreCircle from "./ScoreCircle"; // Assuming this component exists
-import CategoryScore from "./CategoryScore"; // Assuming this component exists
+import ScoreCircle from "./ScoreCircle";
+import CategoryScore from "./CategoryScore";
 
 function AnalyzerResult({ result, history }: { result: any, history: any[] | undefined }) {
   if (!result) {
@@ -19,10 +20,12 @@ function AnalyzerResult({ result, history }: { result: any, history: any[] | und
             <h3 className="text-xl font-semibold text-white mb-4">Recent Analyses</h3>
             <div className="space-y-2 max-w-md mx-auto">
               {history.map((item) => (
-                <div key={item._id} className="bg-gray-800/50 p-3 rounded-lg text-left">
-                  <p className="text-white font-medium truncate">{item.jobDescription}</p>
-                  <p className="text-sm text-gray-400">Score: {item.overallScore}</p>
-                </div>
+                <Link key={item._id} href={`/analyzer/${item._id}`}>
+                  <div className="bg-gray-800/50 p-3 rounded-lg text-left hover:bg-gray-700/50 cursor-pointer transition-colors">
+                    <p className="text-white font-medium truncate">{item.jobDescription}</p>
+                    <p className="text-sm text-gray-400">Score: {item.overallScore}</p>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -30,7 +33,6 @@ function AnalyzerResult({ result, history }: { result: any, history: any[] | und
       </div>
     );
   }
-
   return (
     <div className="space-y-8">
       <Card className="bg-gray-800/40 border-gray-700/50">

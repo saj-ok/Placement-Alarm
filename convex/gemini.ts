@@ -2,6 +2,7 @@ import { action, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export const analyzeResume = action({
@@ -9,9 +10,9 @@ export const analyzeResume = action({
     resumeText: v.string(),
     jobDescriptionText: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { resumeText, jobDescriptionText }) => {
     const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash", 
+        model: "gemini-1.5-flash",
         generationConfig: {
           temperature: 0.6,
           topP: 0.9,
@@ -21,18 +22,18 @@ export const analyzeResume = action({
       });
 
     const prompt = `
-      You are an expert career coach and senior technical recruiter at a top FAANG company.
-      Your task is to conduct an in-depth, professional analysis of a resume against a specific job description.
+      You are an expert career coach and senior technical recruiter at a top FAANG company with over 20 years of experience.
+      Your task is to conduct a rigorous, in-depth, and professional analysis of a resume against a specific job description. Your feedback should be critical, actionable, and tailored.
 
       The output MUST be a single, valid JSON object with no markdown formatting.
 
       The JSON structure must be as follows:
       {
-        "overall_score": number, // A holistic score from 0 to 100 representing the overall match.
-        "summary": string, // A concise, professional summary of the resume's fit for the role, starting with a powerful opening statement.
-        "first_impression": string, // A brief, candid first impression as if a recruiter is skimming the resume for 15 seconds.
+        "overall_score": number, // A holistic score from 0 to 100 representing the overall match. Base this on a weighted average of the categorical scores.
+        "summary": string, // A concise, professional summary of the resume's fit for the role, starting with a powerful opening statement. Be specific about strengths and weaknesses.
+        "first_impression": string, // A brief, candid first impression as if a recruiter is skimming the resume for 15 seconds. Mention what stands out, for better or worse.
         "ats_compatibility": {
-          "score": number, // Score from 0-100 for Applicant Tracking System (ATS) compatibility.
+          "score": number, // Score from 0-100 for Applicant Tracking System (ATS) compatibility, focusing on parsing and keyword matching.
           "suggestions": string[] // Actionable suggestions to improve ATS compatibility.
         },
         "categorical_scores": [
@@ -41,7 +42,7 @@ export const analyzeResume = action({
           { "category": "Impact & Quantifiable Results", "score": number, "explanation": string },
           { "category": "Clarity & Formatting", "score": number, "explanation": string }
         ],
-        "missing_keywords": string[], // A list of crucial keywords from the job description that are missing in the resume.
+        "missing_keywords": string[], // A list of crucial keywords from the job description that are missing in the resume. Be specific.
         "actionable_suggestions": [
           {
             "area": string, // e.g., "Skills Section", "Project Experience", "Work History - [Job Title]"
@@ -54,14 +55,14 @@ export const analyzeResume = action({
         ]
       }
 
-      Analyze the following resume and job description:
+      Critically analyze the following resume and job description. Do not provide generic feedback. Be specific and demanding in your evaluation.
 
       --- RESUME ---
-      ${args.resumeText}
+      ${resumeText}
       ---
 
       --- JOB DESCRIPTION ---
-      ${args.jobDescriptionText}
+      ${jobDescriptionText}
       ---
 
       Now, provide the complete analysis in the specified JSON format.
@@ -69,7 +70,7 @@ export const analyzeResume = action({
 
     try {
       const result = await model.generateContent(prompt);
-      const response = result.response;
+      const response = await result.response;
       const jsonResponse = response.text();
       return JSON.parse(jsonResponse);
     } catch (error) {
@@ -110,6 +111,24 @@ export const getAnalysisHistory = query({
             .query("analyses")
             .withIndex("by_user_id", (q) => q.eq("userId", identity.subject))
             .order("desc")
-            .take(10); 
+            .take(10); // Get the 10 most recent analyses
+    },
+});
+
+export const getAnalysisById = query({
+    args: { id: v.id("analyses") },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            return null;
+        }
+
+        const analysis = await ctx.db.get(args.id);
+
+        if (analysis?.userId !== identity.subject) {
+            return null;
+        }
+
+        return analysis;
     },
 });
