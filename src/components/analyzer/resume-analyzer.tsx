@@ -90,16 +90,7 @@ export function ResumeAnalyzer() {
 
   return (
     <div className="space-y-8">
-      <div className="text-center space-y-4 mb-12">
-        <h1 className="text-5xl font-bold text-white tracking-tight">
-          Optimize Your Resume
-        </h1>
-        <p className="text-xl text-gray-400 max-w-4xl mx-auto leading-relaxed">
-          Get AI-powered insights on how well your resume matches any job description, with specific suggestions for improvement.
-        </p>
-      </div>
-
-      <div className="flex flex-col lg:flex-row justify-center items-center gap-6 mb-12">
+      <div className="flex flex-col lg:flex-row justify-center items-center gap-28 mb-12">
         <FileUploadZone
           title="Upload Resume"
           description="Upload your resume in PDF or DOCX format"

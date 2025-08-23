@@ -22,7 +22,6 @@ export default function JobDescriptionInput({
   const [activeTab, setActiveTab] = useState('text');
 
   return (
-    <React.Fragment>
       <Card className="w-[550px] h-[450px] bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm shadow-xl border border-gray-600/50 hover:border-gray-500/70 transition-all duration-300">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 text-white">
@@ -106,6 +105,5 @@ export default function JobDescriptionInput({
           </Tabs>
         </CardContent>
       </Card>
-    </React.Fragment>
   );
 }
