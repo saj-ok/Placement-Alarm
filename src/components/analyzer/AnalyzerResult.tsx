@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, FileText, Sparkles,  Download, Loader2, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
 import ScoreCircle from "./ScoreCircle";
 import CategoryScore from "./CategoryScore";
-import { AnalysisHistoryCard } from './AnalysisHistoryCard'; // Import the new card
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useAction } from 'convex/react';
@@ -35,38 +34,7 @@ function AnalyzerResult({ result, history, onGenerateResume }: { result: any, hi
     }
   };
 
-
-    if (!result) {
-    return (
-      <div className="text-center py-16">
-        <div className="mx-auto h-16 w-16 bg-gradient-to-r from-gray-700 to-gray-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
-          <FileText className="h-6 w-6 text-gray-400" />
-        </div>
-        <p className="text-gray-300 text-lg font-medium">
-          Your analysis results will appear here.
-        </p>
-        {history && history.length > 0 && (
-          <div className="mt-12 max-w-5xl mx-auto">
-            <h3 className="text-2xl font-semibold text-white mb-6">Recent Analyses</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {history.map((item) => (
-                <AnalysisHistoryCard
-                  key={item._id}
-                  id={item._id}
-                  score={item.overallScore}
-                  jobDescription={item.jobDescription}
-                  createdAt={item._creationTime}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
-    // ... existing result display logic
     <div className="space-y-8">
       <Card className="bg-gray-800/40 border-gray-700/50">
         <CardHeader>

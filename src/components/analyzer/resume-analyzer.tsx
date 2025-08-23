@@ -11,7 +11,11 @@ import toast from "react-hot-toast";
 import FileUploadZone from "./FileUploadZone";
 import JobDescriptionInput from "./JobDesInput";
 
-export function ResumeAnalyzer({ onAnalysisComplete }: { onAnalysisComplete: (result: any) => void }) {
+interface ResumeAnalyzerProps {
+  onAnalysisComplete: (result: any, resumeText: string) => void;
+}
+
+export function ResumeAnalyzer({ onAnalysisComplete }: ResumeAnalyzerProps) {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState<string>("");
   const [jobDescriptionFile, setJobDescriptionFile] = useState<File | null>(null);
@@ -80,7 +84,7 @@ export function ResumeAnalyzer({ onAnalysisComplete }: { onAnalysisComplete: (re
         overallScore: result.overall_score,
       });
 
-      onAnalysisComplete(result);
+      onAnalysisComplete(result, resumeText);
     } catch (error) {
       console.error("Analysis failed:", error);
       toast.error("An error occurred during analysis. Please try again.");
