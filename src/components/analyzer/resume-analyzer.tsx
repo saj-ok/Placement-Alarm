@@ -7,68 +7,10 @@ import { FileUp, BrainCircuit, Loader2, Target, Briefcase, Sparkles, Wand2, Arro
 import { useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import mammoth from "mammoth";
-
-// We will import pdfjs-dist dynamically inside the function that needs it.
-
-async function parsePdf(file: File): Promise<string> {
-  const pdfjsLib = await import("pdfjs-dist");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.mjs`;
-
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-  let text = "";
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    text += content.items.map((item: any) => item.str || '').join(" ");
-  }
-  return text;
-}
-
-// --- UI Components for Analysis Results ---
-
-const ScoreCircle = ({ score }: { score: number }) => {
-  const circumference = 2 * Math.PI * 45;
-  const offset = circumference - (score / 100) * circumference;
-  const color = score > 75 ? "stroke-green-400" : score > 50 ? "stroke-yellow-400" : "stroke-red-400";
-
-  return (
-    <div className="relative flex items-center justify-center w-40 h-40">
-      <svg className="w-full h-full" viewBox="0 0 100 100">
-        <circle className="text-gray-700" strokeWidth="10" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
-        <circle
-          className={`${color} transition-all duration-1000 ease-in-out`}
-          strokeWidth="10"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          stroke="currentColor"
-          fill="transparent"
-          r="45"
-          cx="50"
-          cy="50"
-          transform="rotate(-90 50 50)"
-        />
-      </svg>
-      <span className="absolute text-4xl font-bold text-white">{score}%</span>
-    </div>
-  );
-};
-
-const CategoryScore = ({ category, score, explanation }: { category: string, score: number, explanation: string }) => (
-  <div className="p-4 bg-gray-900/50 rounded-lg">
-    <div className="flex justify-between items-center mb-1">
-      <h5 className="font-semibold text-white">{category}</h5>
-      <span className="font-bold text-purple-400">{score}/100</span>
-    </div>
-    <div className="w-full bg-gray-700 rounded-full h-2.5">
-      <div className="bg-purple-500 h-2.5 rounded-full" style={{ width: `${score}%` }}></div>
-    </div>
-    <p className="text-sm text-slate-400 mt-2">{explanation}</p>
-  </div>
-);
-
-// --- Main Analyzer Component ---
+import ScoreCircle from "./ScoreCircle";
+import CategoryScore from "./CategoryScore";
+import { parsePdf } from "@/lib/parsePdf";
+import toast from "react-hot-toast";
 
 export function ResumeAnalyzer() {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -84,14 +26,16 @@ export function ResumeAnalyzer() {
   };
 
   const handleAnalyze = async () => {
-    if (!resumeFile || !jobDescription) {
-      alert("Please upload a resume and provide a job description.");
+    if (!resumeFile) {
+      toast.error("Please upload a resume.");
       return;
     }
-
+    if (!jobDescription) {
+      toast.error("Please provide a job description.");
+      return;
+    }
     setIsLoading(true);
     setAnalysis(null);
-
     try {
       let resumeText = "";
       if (resumeFile.type === "application/pdf") {
@@ -115,7 +59,7 @@ export function ResumeAnalyzer() {
       setAnalysis(result);
     } catch (error) {
       console.error("Analysis failed:", error);
-      alert("An error occurred during analysis. Please try again.");
+      toast.error("An error occurred during analysis. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -165,8 +109,8 @@ export function ResumeAnalyzer() {
             />
           </div>
         </CardContent>
-        <div className="p-6">
-          <Button onClick={handleAnalyze} disabled={isLoading} className="w-full text-base font-semibold py-6 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white border-0 shadow-xl">
+        <div className="p-6 text-center">
+          <Button onClick={handleAnalyze} disabled={isLoading} className="text-base font-semibold py-6 bg-blue-500 hover:bg-blue-600 text-white border-0 shadow-xl">
             {isLoading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Analyzing...</> : <><Wand2 className="mr-2 h-5 w-5" /> Analyze Resume</>}
           </Button>
         </div>
