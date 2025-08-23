@@ -29,9 +29,9 @@ export default function FileUploadZone({
   };
 
   return (
-    <Card className={`w-[550px] h-[450px]  relative overflow-hidden  bg-gray-800/50  backdrop-blur-sm shadow-xl transition-all duration-300 cursor-pointer group ${
-      dragActive ? 'border-blue-400 bg-blue-50/50 scale-[1.02]' : 'border-slate-200 hover:border-slate-300'
-    } ${file ? 'border-green-400 bg-green-50/30' : ''}`}>
+    <Card className={`w-[550px] h-[450px] relative overflow-hidden bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-sm shadow-xl transition-all duration-300 cursor-pointer group border ${
+      dragActive ? 'border-blue-400/70 bg-blue-500/10 scale-[1.02] shadow-blue-500/20' : 'border-gray-600/50 hover:border-gray-500/70'
+    } ${file ? 'border-green-400/70 bg-green-500/10 shadow-green-500/20' : ''}`}>
       <div 
         onClick={handleClick}
         className="p-8 text-center relative"
@@ -47,35 +47,39 @@ export default function FileUploadZone({
         <div className="relative z-10">
           <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center transition-all duration-300 ${
             file 
-              ? 'bg-green-500 text-white shadow-lg' 
+              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/30' 
               : dragActive 
-                ? 'bg-blue-500 text-white shadow-lg scale-110' 
-                : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 scale-110' 
+                : 'bg-gradient-to-r from-gray-700 to-gray-600 text-gray-300 group-hover:from-gray-600 group-hover:to-gray-500'
           }`}>
             {file ? <Check className="w-7 h-7" /> : <Icon className="w-7 h-7" />}
           </div>
 
-          <h3 className="text-xl font-semibold text-slate-800 mb-2">{title}</h3>
-          <p className="text-slate-500 mb-6">{description}</p>
+          {/* IMPROVED: Better text colors for dark theme */}
+          <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
+          <p className="text-gray-300 mb-6">{description}</p>
 
           {file ? (
-            <div className="bg-white rounded-lg p-4 border border-green-200">
+            // IMPROVED: Dark theme styling for file display
+            <div className="bg-gray-700/50 rounded-lg p-4 border border-green-400/30">
               <div className="flex items-center justify-center space-x-2">
                 <FileText className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium text-green-800">{file.name}</span>
+                <span className="text-sm font-medium text-green-400">{file.name}</span>
               </div>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-gray-400 mt-1">
                 {(file.size / 1024 / 1024).toFixed(2)} MB
               </p>
             </div>
           ) : (
-            <Button variant="outline" className="border-slate-300 hover:border-slate-400">
+            // IMPROVED: Better button styling for dark theme
+            <Button variant="outline" className="border-gray-500/50 hover:border-gray-400/70 text-gray-200 hover:text-white bg-gray-700/30 hover:bg-gray-600/50">
               <Upload className="w-4 h-4 mr-2" />
               Choose File
             </Button>
           )}
 
-          <p className="text-xs text-slate-400 mt-4">{acceptedTypes}</p>
+          {/* IMPROVED: Better text color for accepted types */}
+          <p className="text-xs text-gray-400 mt-4">{acceptedTypes}</p>
         </div>
       </div>
     </Card>

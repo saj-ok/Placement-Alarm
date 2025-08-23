@@ -30,12 +30,13 @@ export function ResumeAnalyzer() {
     }
   };
 
-  const handleAnalyze = async () => {
+    const handleAnalyze = async () => {
     if (!resumeFile) {
       toast.error("Please upload a resume.");
       return;
     }
-    if (!jobDescription || !jobDescriptionFile) {
+    // FIXED: Check for either job description text OR file, not both
+    if (!jobDescription && !jobDescriptionFile) {
       toast.error("Please provide a job description.");
       return;
     }
@@ -59,23 +60,21 @@ export function ResumeAnalyzer() {
         return;
       }
 
-      // Parse job description text
       let jobDescriptionText = "";
-      if (jobDescriptionFile.type === "application/pdf") {
+      if (jobDescriptionFile && jobDescriptionFile.type === "application/pdf") {
         jobDescriptionText = await parsePdf(jobDescriptionFile);
       } else if (
-        jobDescriptionFile.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        jobDescriptionFile && jobDescriptionFile.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
       ) {
         const arrayBuffer = await jobDescriptionFile.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer });
         jobDescriptionText = result.value;
-      } else {
+      } else if (jobDescriptionFile) {
         toast.error("Unsupported file type. Please upload a PDF or DOCX file.");
         setIsLoading(false);
         return;
       }
 
-      // Run analysis
       const result = await analyze({
         resumeText: resumeText,
         jobDescriptionText: jobDescription || jobDescriptionText,
