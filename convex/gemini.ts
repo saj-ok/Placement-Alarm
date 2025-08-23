@@ -1,6 +1,7 @@
 import { action, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { api } from "./_generated/api";
 
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -136,26 +137,45 @@ export const getAnalysisById = query({
 export const generateResume = action({
   args: {
     resumeText: v.string(),
-    suggestions: v.any(), // Pass the suggestions from the analysis
+    suggestions: v.any(),
   },
-  handler: async (_, { resumeText, suggestions }) => {
+  handler: async (ctx, { resumeText, suggestions }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthorized");
+    }
+
+    // Fetch the user's profile to get their name and email
+    const userProfile = await ctx.runQuery(api.profiles.getUserProfile, { userId: identity.subject });
+
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
-      You are a professional resume writer.
-      Your task is to rewrite the "Original Resume" by applying the "Improvement Suggestions".
-      The output must be only the full, revised resume text. Do not include any commentary, explanations, or markdown formatting.
-      Maintain a professional tone and structure. Ensure the final output is clean and ready to be copied into a document.
+      You are an expert professional resume writer.
+      Your task is to rewrite the provided "Original Resume" by intelligently applying the "Improvement Suggestions".
+
+      **Crucial Instructions:**
+      1.  **Preserve Structure:** You MUST maintain the original layout and formatting (headings, sections, bullet points, spacing, etc.) of the resume as closely as possible. Do not invent new sections or drastically reorder existing ones unless a suggestion explicitly calls for it.
+      2.  **Use Real User Data:** If you encounter placeholders like "[Your Name]", "[Your Email]", "[Phone Number]", etc., you MUST replace them with the following user data. If the data is not available, leave the placeholder as is.
+          - Name: ${userProfile?.name || '[Your Name]'}
+          - Email: ${userProfile?.email || '[your.email@example.com]'}
+      3.  **Apply Suggestions Thoughtfully:** Integrate the suggestions into the existing text. Rewrite bullet points to be more impactful, add missing keywords where they fit naturally, and refine phrasing as suggested.
+      4.  **Output Format:** The output MUST be only the full, revised resume text. Do not include any commentary, explanations, or markdown formatting like \`\`\`. The output should be clean, plain text.
 
       --- Improvement Suggestions ---
       ${JSON.stringify(suggestions, null, 2)}
+      ---
+
+      --- User Profile Data ---
+      Name: ${userProfile?.name}
+      Email: ${userProfile?.email}
       ---
 
       --- Original Resume ---
       ${resumeText}
       ---
 
-      Now, provide the full, rewritten resume text below:
+      Now, provide the full, rewritten resume text below, adhering strictly to all instructions.
     `;
 
     try {
