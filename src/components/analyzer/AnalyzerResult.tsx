@@ -2,37 +2,11 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, FileText, Sparkles,  Download, Loader2, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import { BarChart, Sparkles, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
 import ScoreCircle from "./ScoreCircle";
 import CategoryScore from "./CategoryScore";
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
-import { useAction } from 'convex/react';
-import toast from 'react-hot-toast';
-import { api } from '../../../convex/_generated/api';
 
-
-function AnalyzerResult({ result, history, onGenerateResume }: { result: any, history: any[] | undefined, onGenerateResume: (text: string) => void }) {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const generateResumeAction = useAction(api.gemini.generateResume);
-
-  const handleGenerateClick = async () => {
-    if (!result) return;
-    setIsGenerating(true);
-    try {
-      const originalResumeText = "...."; // You will need to pass the original resume text down to this component
-      const generatedText = await generateResumeAction({
-        resumeText: originalResumeText, // This needs to be available here
-        suggestions: result.actionable_suggestions,
-      });
-      onGenerateResume(generatedText);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to generate resume.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+function AnalyzerResult({ result, history }: { result: any, history: any[] | undefined}) {
 
   return (
     <div className="space-y-8">
@@ -43,19 +17,6 @@ function AnalyzerResult({ result, history, onGenerateResume }: { result: any, hi
               <Sparkles size={28} className="text-yellow-300" />
               Resume Analysis Report
             </CardTitle>
-            <Button onClick={handleGenerateClick} disabled={isGenerating}>
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Download className="mr-2 h-4 w-4" />
-                  Generate & Edit Resume
-                </>
-              )}
-            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-10">
